@@ -443,6 +443,11 @@
       border-radius: var(--radius-xs);
       border: 1px solid transparent;
       transition: border-color 0.15s ease, background 0.15s ease;
+      cursor: pointer;
+    }
+    .explore-row:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 1px;
     }
 
     .explore-row:hover {
@@ -518,6 +523,206 @@
     .explore-row-links button.js-agent-source:hover {
       color: var(--accent);
       text-decoration: underline;
+    }
+
+    /* ────────── agent spotlight (full main-area brief from explore row) ────────── */
+    .agent-spotlight {
+      display: none;
+      flex-direction: column;
+      /* Size from content; avoid a tall min-height + flex:1 scroll child stretching grid rows */
+      min-height: 0;
+      max-height: min(88vh, 900px);
+      margin: 0 0 1rem;
+      border: 1px solid var(--line-2);
+      border-radius: var(--radius);
+      background: var(--surface);
+      overflow: hidden;
+      box-shadow: var(--shadow-1);
+    }
+    .agent-spotlight.is-open {
+      display: flex;
+      flex: 1 1 auto;
+      min-height: 0;
+    }
+    .agent-spotlight-head {
+      flex-shrink: 0;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.5rem 0.75rem;
+      padding: 0.55rem 0.75rem;
+      border-bottom: 1px solid var(--line);
+      background: rgba(0, 0, 0, 0.2);
+    }
+    .agent-spotlight-head .ghost {
+      font-size: 0.78rem;
+      padding: 0.35rem 0.55rem;
+    }
+    .agent-spotlight-kicker {
+      font-family: var(--font-mono);
+      font-size: 0.62rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--muted-2);
+    }
+    .agent-spotlight-scroll {
+      flex: 1 1 auto;
+      min-height: 0;
+      overflow: auto;
+      padding: 0.85rem 1rem 1.1rem;
+      -webkit-overflow-scrolling: touch;
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      gap: 0;
+    }
+    .agent-spotlight-scroll > .agent-spotlight-hero,
+    .agent-spotlight-scroll > .agent-spotlight-grid {
+      flex: 0 0 auto;
+    }
+    .agent-spotlight-hero {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.65rem 1rem;
+      align-items: flex-start;
+      margin-bottom: 1rem;
+    }
+    .agent-spotlight-emoji {
+      font-size: 2rem;
+      line-height: 1;
+    }
+    .agent-spotlight-hero-text {
+      flex: 1;
+      min-width: min(100%, 220px);
+    }
+    .agent-spotlight-title {
+      margin: 0;
+      font-size: clamp(1.25rem, 3vw, 1.65rem);
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      line-height: 1.2;
+    }
+    .agent-spotlight-path {
+      margin: 0.35rem 0 0;
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      color: var(--muted-2);
+      word-break: break-all;
+    }
+    .agent-spotlight-meta {
+      margin: 0.4rem 0 0;
+      font-size: 0.78rem;
+      color: var(--muted);
+    }
+    .agent-spotlight-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+      align-items: center;
+      margin-top: 0.55rem;
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+    }
+    .agent-spotlight-actions a {
+      color: var(--accent-dim);
+      text-decoration: none;
+    }
+    .agent-spotlight-actions a:hover {
+      color: var(--accent);
+      text-decoration: underline;
+    }
+    .agent-spotlight-actions .js-agent-source {
+      appearance: none;
+      background: none;
+      border: none;
+      padding: 0;
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      color: var(--accent-dim);
+      cursor: pointer;
+    }
+    .agent-spotlight-actions .js-agent-source:hover {
+      color: var(--accent);
+      text-decoration: underline;
+    }
+    .agent-spotlight-grid {
+      display: grid;
+      gap: 0.75rem;
+      grid-template-columns: 1fr;
+      align-items: start;
+    }
+    @media (min-width: 900px) {
+      .agent-spotlight-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        align-items: start;
+      }
+    }
+    .spotlight-card {
+      margin: 0;
+      padding: 0.75rem 0.85rem;
+      border-radius: var(--radius-xs);
+      border: 1px solid var(--line);
+      background: rgba(0, 0, 0, 0.18);
+      min-height: 0;
+      align-self: start;
+      width: 100%;
+      box-sizing: border-box;
+    }
+    .spotlight-card h3 {
+      margin: 0 0 0.5rem;
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--accent-dim);
+    }
+    .spotlight-card .spotlight-body {
+      font-size: 0.84rem;
+      line-height: 1.5;
+      color: var(--text);
+    }
+    .spotlight-card .spotlight-body p {
+      margin: 0 0 0.5rem;
+      color: var(--muted);
+    }
+    .spotlight-card .spotlight-body p:last-child {
+      margin-bottom: 0;
+    }
+    .spotlight-card ul {
+      margin: 0.35rem 0 0;
+      padding-left: 1.1rem;
+      color: var(--muted);
+    }
+    .spotlight-card li {
+      margin-bottom: 0.28rem;
+    }
+    .spotlight-card pre {
+      margin: 0.5rem 0 0;
+      padding: 0.55rem 0.65rem;
+      font-size: 0.68rem;
+      line-height: 1.4;
+      border-radius: 6px;
+      border: 1px solid var(--line-2);
+      background: rgba(0, 0, 0, 0.35);
+      overflow: auto;
+      max-height: 220px;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    .spotlight-card .spotlight-lang {
+      display: block;
+      margin-bottom: 0.25rem;
+      font-family: var(--font-mono);
+      font-size: 0.6rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted-2);
+    }
+    .spotlight-empty {
+      font-size: 0.8rem;
+      color: var(--muted-2);
+      font-style: italic;
     }
 
     .agent-source-backdrop {
@@ -1298,18 +1503,24 @@
     }
     textarea.goal:focus { outline: none; }
 
+    /* Always stack hint under buttons. Viewport ≥520px was a false signal: this block can be
+       ~300px wide inside the bento column (explore open / narrow split), where a row flex
+       overlapped the primary button with the shortcut line. */
     .hero-actions {
       display: flex;
       flex-direction: column;
-      gap: 0.7rem;
+      gap: 0.65rem;
       margin-top: 0.9rem;
+      align-items: stretch;
+      min-width: 0;
     }
-    @media (min-width: 520px) {
-      .hero-actions { flex-direction: row; flex-wrap: wrap; align-items: center; }
-      .hero-actions .actions { margin-top: 0; flex: 1; min-width: 0; }
+    .hero-actions .actions {
+      margin-top: 0;
+      align-self: flex-start;
     }
     .action-hint {
       margin: 0;
+      max-width: 100%;
       font-family: var(--font-mono);
       font-size: 0.65rem;
       font-weight: 400;
@@ -1421,8 +1632,6 @@
       align-items: center;
       margin-top: 1rem;
     }
-    .hero-actions .actions { margin-top: 0; }
-
     button.primary {
       appearance: none;
       border: 1px solid var(--accent);
@@ -1716,12 +1925,10 @@
     article.card.card-open {
       border-color: var(--line-3);
       background: var(--surface-2);
-    }
-    article.card.card-open::before { background: var(--violet); }
-    article.card.card-open {
       padding: 0.65rem 0.75rem 0.65rem 0.9rem;
       gap: 0.45rem 0.65rem;
     }
+    article.card.card-open::before { background: var(--violet); }
 
     article.card .card-copy {
       font-family: var(--font-mono);
@@ -1867,9 +2074,6 @@
     }
     .card-aside .score,
     .card-aside .card-copy {
-      flex-shrink: 0;
-    }
-    .followup-row-head .followup-copy {
       flex-shrink: 0;
     }
     @media (max-width: 560px) {
@@ -2420,7 +2624,7 @@
           <header class="explore-head">
             <h2 class="explore-title">Explore</h2>
             <p class="explore-sub">
-              Token index over embedded catalog fields — filter by name, path, category, description, and vibe.
+              Token index over embedded catalog fields — filter by name, path, category, description, and vibe. Click a row (not the links) to open a full brief in the main workspace.
             </p>
           </header>
           <div class="explore-controls">
@@ -2490,7 +2694,7 @@
       </div>
 
       <main id="main-content" class="app-window-body">
-        <header class="masthead">
+        <header class="masthead" id="masthead">
           <p class="kicker">the agency / matchmaker</p>
           <h1>Define your outcome.<span class="cursor" aria-hidden="true"></span></h1>
           <p class="lead">
@@ -2498,7 +2702,17 @@
           </p>
         </header>
 
-        <div class="bento-workspace">
+        <section id="agent-spotlight" class="agent-spotlight" aria-hidden="true" aria-labelledby="spotlight-title">
+          <div class="agent-spotlight-head">
+            <button type="button" class="ghost" id="spotlight-dismiss" aria-label="Close agent brief and return to matchmaker">
+              ← back to workspace
+            </button>
+            <span class="agent-spotlight-kicker">agent brief · from catalog</span>
+          </div>
+          <div class="agent-spotlight-scroll" id="spotlight-body"></div>
+        </section>
+
+        <div class="bento-workspace" id="main-workspace">
           <div class="bento-left-scroll">
             <section class="panel bento-tile-goal" aria-labelledby="lbl-goal">
               <h2 id="lbl-goal">prompt · gemini</h2>
@@ -2784,6 +2998,10 @@
   ];
   const STOP = new Set([
     "the", "and", "for", "are", "but", "not", "you", "all", "can", "her", "was", "one", "our", "out", "day", "get", "has", "him", "his", "how", "its", "may", "new", "now", "old", "see", "two", "who", "boy", "did", "let", "put", "say", "she", "too", "use", "that", "this", "with", "from", "have", "been", "what", "when", "your", "into", "than", "then", "them", "will", "just", "also", "some", "need", "want", "help", "make", "build", "using", "about", "would", "could", "should",
+  ]);
+  /** Filter ultra-common two-letter tokens so we can still match tech (ci, ml, ux, …) without scoring "to", "in", … */
+  const STOP2 = new Set([
+    "an", "as", "at", "be", "by", "do", "he", "if", "in", "is", "it", "me", "my", "of", "on", "or", "so", "to", "up", "us", "we", "am", "id", "no", "ok", "eh",
   ]);
 
   const divisionBox = document.getElementById("division-boxes");
@@ -3185,12 +3403,22 @@
     }
   });
 
+  /** Word runs (preserves k8s, api3, unicode letters); order preserved for bigrams */
+  function collectTextTokens(text) {
+    const raw = String(text || "").toLowerCase();
+    const parts = raw.match(/[a-z0-9\u4e00-\u9fff]+/g) || [];
+    const out = [];
+    for (const w of parts) {
+      if (w.length < 2) continue;
+      if (w.length === 2 && STOP2.has(w)) continue;
+      if (w.length > 2 && STOP.has(w)) continue;
+      out.push(w);
+    }
+    return out;
+  }
+
   function tokenize(text) {
-    return text
-      .toLowerCase()
-      .replace(/[^a-z0-9\u4e00-\u9fff]+/g, " ")
-      .split(/\s+/)
-      .filter((w) => w.length > 2 && !STOP.has(w));
+    return [...new Set(collectTextTokens(text))];
   }
 
   function haystack(agent) {
@@ -3198,6 +3426,38 @@
       .join(" \n ")
       .toLowerCase();
   }
+
+  /** One-time corpus stats for offline ranking (smoothed IDF; underweights terms that appear in many agents). */
+  const OFFLINE_LEXICAL = (function buildOfflineLexical() {
+    const df = new Map();
+    const rows = CATALOG.map((agent) => {
+      const hs = haystack(agent);
+      const tokens = new Set();
+      const parts = hs.match(/[a-z0-9\u4e00-\u9fff]+/g) || [];
+      for (const raw of parts) {
+        const w = raw.toLowerCase();
+        if (w.length < 2) continue;
+        if (w.length === 2 && STOP2.has(w)) continue;
+        if (w.length > 2 && STOP.has(w)) continue;
+        tokens.add(w);
+      }
+      return {
+        agent,
+        hs,
+        tokens,
+        nameL: String(agent.name || "").toLowerCase(),
+      };
+    });
+    for (const r of rows) {
+      for (const t of r.tokens) df.set(t, (df.get(t) || 0) + 1);
+    }
+    const N = Math.max(1, rows.length);
+    function idf(t) {
+      const d = df.get(t) || 0;
+      return Math.log((N - d + 0.5) / (d + 0.5) + 1);
+    }
+    return { rows, idf };
+  })();
 
   const exploreSidebarEl = document.getElementById("explore-sidebar");
   const exploreToggleEl = document.getElementById("sidebar-toggle");
@@ -3343,11 +3603,7 @@
     const blob = [agent.name, agent.path, agent.category, agent.description || "", agent.vibe || ""]
       .join(" ")
       .toLowerCase();
-    const bag = new Set(tokenize(blob));
-    for (const raw of blob.split(/\s+/)) {
-      const t = raw.replace(/[^a-z0-9\u4e00-\u9fff]+/gi, "").toLowerCase();
-      if (t.length > 2 && !STOP.has(t)) bag.add(t);
-    }
+    const bag = new Set(collectTextTokens(blob));
     return { agent, blob, bag };
   });
 
@@ -3476,6 +3732,12 @@
         e.preventDefault();
         return;
       }
+      const sp = document.getElementById("agent-spotlight");
+      if (sp && sp.classList.contains("is-open")) {
+        closeAgentSpotlight();
+        e.preventDefault();
+        return;
+      }
       if (filtersIsOpen()) {
         closeFiltersPopover();
         e.preventDefault();
@@ -3518,14 +3780,29 @@
     gh.target = "_blank";
     gh.rel = "noopener noreferrer";
     gh.textContent = "github";
+    gh.addEventListener("click", (e) => e.stopPropagation());
     const loc = document.createElement("button");
     loc.type = "button";
     loc.className = "js-agent-source";
     loc.dataset.path = agent.path;
     loc.textContent = "local";
     loc.title = "View full markdown (copy)";
+    loc.addEventListener("click", (e) => e.stopPropagation());
     links.appendChild(gh);
     links.appendChild(loc);
+    art.dataset.path = agent.path;
+    art.tabIndex = 0;
+    art.setAttribute("aria-label", `Open agent brief: ${agent.name}`);
+    art.addEventListener("click", (e) => {
+      if (e.target.closest("a, button")) return;
+      openAgentSpotlight(agent);
+    });
+    art.addEventListener("keydown", (e) => {
+      if (e.key !== "Enter" && e.key !== " ") return;
+      e.preventDefault();
+      if (e.target.closest("a, button")) return;
+      openAgentSpotlight(agent);
+    });
     art.appendChild(em);
     art.appendChild(mid);
     art.appendChild(links);
@@ -3671,38 +3948,175 @@
     renderExploreList();
   }
 
+  /** Map raw heuristic scores in the rendered slice to a 0–100 display fit (min–max), or a gentle ladder when all zero. */
+  function attachOfflineFitScores(rows) {
+    if (!rows.length) return [];
+    const max = rows[0].score;
+    const min = rows[rows.length - 1].score;
+    return rows.map((r, i) => {
+      let fitDisplay;
+      if (max <= 0) fitDisplay = Math.max(35, 58 - i * 3);
+      else if (max === min) fitDisplay = 85;
+      else fitDisplay = 1 + Math.round((99 * (r.score - min)) / (max - min || 1));
+      return { ...r, fitDisplay: Math.max(1, Math.min(100, fitDisplay)) };
+    });
+  }
+
+  function offlineWhyFromEvidence(evidence, agent) {
+    const parts = [];
+    if (evidence.topMatchedTerms && evidence.topMatchedTerms.length) {
+      parts.push("Lexical overlap on: " + evidence.topMatchedTerms.slice(0, 4).join(", ") + ".");
+    }
+    if (evidence.divisionBonus) parts.push("Boosted: agent is in a selected division.");
+    if (evidence.compactQueryHit) parts.push("Long phrase from your prompt appears almost verbatim in this profile.");
+    if (evidence.phraseCount > 0) parts.push("Adjacent word pairs from your goal show up in this entry.");
+    if (evidence.tagHitLabels && evidence.tagHitLabels.length) {
+      parts.push("Focus-tag themes: " + evidence.tagHitLabels.join(", ") + ".");
+    }
+    if (evidence.gameBoost) parts.push("Games focus tag + game-development path boost applied.");
+    if (evidence.chinaBoost) parts.push("APAC / China focus tag boost applied.");
+    if (!parts.length) {
+      const fb = (agent.vibe || agent.description || "").trim();
+      return fb.length > 220 ? fb.slice(0, 219) + "…" : fb;
+    }
+    return parts.slice(0, 2).join(" ");
+  }
+
+  function offlineCaveatForList(list, queryText) {
+    const toks = collectTextTokens(queryText);
+    if (toks.length < 2) {
+      return "Very short query — rankings are broad. Add specifics or use Gemini for semantic fit.";
+    }
+    if (list.length >= 2 && list[0].score > 0 && list[1].score > 0) {
+      const gap = list[0].score - list[1].score;
+      if (gap <= Math.max(2, list[0].score * 0.06)) {
+        return "Top picks are close on raw score — skim the list or narrow divisions.";
+      }
+    }
+    if (list[0].score === 0) {
+      return "Weak lexical overlap — showing a balanced slice of the catalog.";
+    }
+    return "";
+  }
+
+  function offlineSummaryFromList(list, queryText) {
+    const catCounts = {};
+    for (const row of list.slice(0, 8)) {
+      const c = row.agent.category || "uncategorized";
+      catCounts[c] = (catCounts[c] || 0) + 1;
+    }
+    const topCats = Object.entries(catCounts)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 3)
+      .map(([c]) => c);
+    const leadNames = list
+      .slice(0, 3)
+      .map((r) => r.agent.name)
+      .join(", ");
+    let s =
+      "Offline ranker (IDF-weighted tokens, divisions, focus tags) surfaced " +
+      list.length +
+      " agents. Leading divisions: " +
+      (topCats.length ? topCats.join(", ") : "mixed") +
+      ". Top entries include " +
+      leadNames +
+      ".";
+    if (queryText.length > 48) {
+      s += " Ordering favors rare terms shared with your goal text.";
+    } else {
+      s += " Short prompt — scores lean on catalog-wide term rarity.";
+    }
+    return s;
+  }
+
   function rankAllAgents() {
     const goal = goalEl.value.trim();
-    const goalTokens = tokenize(goal);
+    const extra = (document.getElementById("extra-ctx").value || "").trim();
+    const queryText = [goal, extra].filter(Boolean).join("\n");
+    const goalTokens = collectTextTokens(queryText);
     const selectedCats = Array.from(divisionBox.querySelectorAll("input:checked")).map((el) => el.dataset.category);
     const selectedTags = Array.from(focusBox.querySelectorAll("input:checked")).map((el) => el.dataset.tag);
     const tagKeys = FOCUS_TAGS.filter((t) => selectedTags.includes(t.id)).flatMap((t) => t.keys);
 
     const multiDivision =
-      selectedCats.length >= 3 || /\borchestrat|workflow|pipeline|multiple agents|handoff|full stack project\b/i.test(goal);
+      selectedCats.length >= 3 ||
+      /\borchestrat|workflow|pipeline|multiple agents|handoff|full stack project\b/i.test(queryText);
 
-    const ranked = CATALOG.map((agent) => {
+    const qCompact = queryText.toLowerCase().replace(/\s+/g, " ").trim();
+    const idfFn = OFFLINE_LEXICAL.idf;
+
+    const ranked = OFFLINE_LEXICAL.rows.map(({ agent, hs, tokens, nameL }) => {
       let score = 0;
-      const hs = haystack(agent);
+      const termContrib = new Map();
 
       if (selectedCats.length) {
         if (selectedCats.includes(agent.category)) score += 18;
       }
 
       for (const tok of goalTokens) {
-        if (hs.includes(tok)) score += 4;
+        if (!tokens.has(tok)) continue;
+        const w = idfFn(tok);
+        let add = 3.6 * w;
+        if (nameL.includes(tok)) add += 2.4 * w;
+        score += add;
+        termContrib.set(tok, (termContrib.get(tok) || 0) + add);
       }
 
+      let phraseCount = 0;
+      for (let i = 0; i < goalTokens.length - 1; i++) {
+        const a = goalTokens[i];
+        const b = goalTokens[i + 1];
+        if (!tokens.has(a) || !tokens.has(b)) continue;
+        const needle = `${a} ${b}`;
+        if (hs.includes(needle)) {
+          score += 5.5;
+          phraseCount++;
+        }
+      }
+
+      let compactQueryHit = false;
+      if (qCompact.length >= 8 && hs.includes(qCompact)) {
+        score += 24;
+        compactQueryHit = true;
+      }
+
+      const tagHitLabels = [];
       for (const k of tagKeys) {
-        if (hs.includes(k.toLowerCase())) score += 7;
+        const kl = k.toLowerCase();
+        if (hs.includes(kl)) {
+          score += 7;
+          const short = k.length > 28 ? k.slice(0, 27) + "…" : k;
+          tagHitLabels.push(short);
+        }
       }
 
-      if (agent.path.includes("game-development")) {
-        if (selectedTags.includes("games")) score += 10;
+      let gameBoost = false;
+      if (agent.path.includes("game-development") && selectedTags.includes("games")) {
+        score += 10;
+        gameBoost = true;
       }
-      if (/china|wechat|douyin|apac/i.test(goal) && selectedTags.includes("china")) score += 5;
+      let chinaBoost = false;
+      if (/china|wechat|douyin|apac/i.test(queryText) && selectedTags.includes("china")) {
+        score += 5;
+        chinaBoost = true;
+      }
 
-      return { agent, score };
+      const topMatchedTerms = [...termContrib.entries()]
+        .sort((x, y) => y[1] - x[1])
+        .slice(0, 5)
+        .map(([tok]) => tok);
+
+      const evidence = {
+        topMatchedTerms,
+        divisionBonus: selectedCats.length > 0 && selectedCats.includes(agent.category),
+        phraseCount,
+        compactQueryHit,
+        tagHitLabels: tagHitLabels.slice(0, 4),
+        gameBoost,
+        chinaBoost,
+      };
+
+      return { agent, score, evidence };
     });
 
     ranked.sort((a, b) => b.score - a.score);
@@ -3713,7 +4127,9 @@
     const { ranked, multiDivision } = rankAllAgents();
     const top = ranked.filter((r) => r.score > 0).slice(0, 12);
     const fallback = ranked.slice(0, 8).map((r) => ({ ...r, score: r.score || 0 }));
-    return { list: top.length ? top : fallback, multiDivision };
+    const listRaw = top.length ? top : fallback;
+    const list = attachOfflineFitScores(listRaw);
+    return { list, multiDivision };
   }
 
   function followUpAgents(primaryPath) {
@@ -3844,6 +4260,89 @@
         }, 1800);
       }
     });
+  }
+
+  /**
+   * Shared match card DOM for Gemini and offline paths (fit 0–100, why, optional caveat).
+   * @param {object} opts
+   * @param {number} opts.rank
+   * @param {string} opts.emoji
+   * @param {string} opts.title
+   * @param {string} opts.why
+   * @param {string} [opts.caveat]
+   * @param {string} opts.path
+   * @param {number|string|null} opts.fitScore
+   * @param {string} opts.ghBase
+   * @param {object} opts.copyCtx — passed to wireMatchCopyBtn
+   * @param {"gemini"|"offline"} opts.rankerKind
+   */
+  function buildMatchCard(opts) {
+    const { rank, emoji, title, why, caveat, path, fitScore, ghBase, copyCtx, rankerKind } = opts;
+    const fitLabel =
+      fitScore != null && fitScore !== "" ? String(fitScore) + " out of 100" : "score not given";
+    const kindLabel = rankerKind === "gemini" ? "Gemini" : "Offline";
+    const art = document.createElement("article");
+    art.className = "card";
+    art.dataset.path = path;
+    art.dataset.ghBase = ghBase || "";
+    art.style.cursor = "pointer";
+    art.title = "Click to show suggested follow-on agents for your prompt";
+    art.setAttribute("aria-label", `${rank}. ${title}, ${kindLabel} fit ${fitLabel}`);
+    const em = document.createElement("div");
+    em.className = "emoji";
+    em.textContent = emoji || "📄";
+    em.setAttribute("aria-hidden", "true");
+    const bodyDiv = document.createElement("div");
+    bodyDiv.className = "card-body";
+    const h = document.createElement("h3");
+    h.textContent = `${String(rank).padStart(2, "0")} · ${title}`;
+    const whyEl = document.createElement("p");
+    whyEl.className = "vibe";
+    whyEl.textContent = why || "";
+    const pathEl = document.createElement("div");
+    pathEl.className = "path";
+    pathEl.textContent = path;
+    pathEl.title = path;
+    bodyDiv.appendChild(h);
+    bodyDiv.appendChild(whyEl);
+    if (caveat) {
+      const cEl = document.createElement("p");
+      cEl.className = "vibe";
+      cEl.style.marginTop = "0.25rem";
+      cEl.textContent = "caveat: " + caveat;
+      bodyDiv.appendChild(cEl);
+    }
+    bodyDiv.appendChild(pathEl);
+    const aside = document.createElement("div");
+    aside.className = "card-aside";
+    const sc = document.createElement("div");
+    sc.className = "score";
+    sc.setAttribute("aria-hidden", "true");
+    sc.textContent = (fitScore != null && fitScore !== "" ? fitScore : "—") + " / 100";
+    const links = document.createElement("div");
+    links.className = "links";
+    const gh = document.createElement("a");
+    gh.href = ghLinkWithBase(path, ghBase);
+    gh.target = "_blank";
+    gh.rel = "noopener noreferrer";
+    gh.textContent = "github";
+    links.appendChild(gh);
+    const loc = document.createElement("button");
+    loc.type = "button";
+    loc.className = "js-agent-source";
+    loc.dataset.path = path;
+    loc.textContent = "local";
+    loc.title = "View full markdown (copy)";
+    links.appendChild(loc);
+    const copyBtn = document.createElement("button");
+    wireMatchCopyBtn(copyBtn, copyCtx);
+    aside.appendChild(sc);
+    aside.appendChild(copyBtn);
+    aside.appendChild(links);
+    art.appendChild(em);
+    art.appendChild(bodyDiv);
+    art.appendChild(aside);
+    return art;
   }
 
   function ensureFollowUpsPanel(card) {
@@ -4054,8 +4553,11 @@
           body: JSON.stringify(body),
         });
       } catch {
+        const net = typeof navigator !== "undefined" && navigator.onLine === false;
         metaEl.textContent =
-          "server unreachable. from repo root: python3 agent-matchmaker/webapp.py, then open the printed url (not file://)";
+          "server unreachable. from repo root: python3 agent-matchmaker/webapp.py, then open the printed url (not file://)." +
+          (net ? " browser reports offline." : "") +
+          ' turn off "use gemini ranker" to rank with built-in offline heuristics.';
         return;
       }
       let data = {};
@@ -4066,7 +4568,9 @@
         return;
       }
       if (!data.ok) {
-        metaEl.textContent = data.error || "request failed.";
+        metaEl.textContent =
+          (data.error || "request failed.") +
+          ' — try again, or turn off "use gemini ranker" for offline heuristics.';
         resultsEl.innerHTML =
           '<p class="empty">' + escapeHtml(String(data.error || "Error")) + "</p>";
         return;
@@ -4097,82 +4601,33 @@
       resultsEl.innerHTML = "";
       matches.forEach((m, i) => {
         const title = m.name || m.path;
-        const fitLabel = m.fit_score != null ? String(m.fit_score) + " out of 100" : "score not given";
-        const art = document.createElement("article");
-        art.className = "card";
-        art.dataset.path = m.path;
-        art.dataset.ghBase = ghBase;
-        art.style.cursor = "pointer";
-        art.title = "Click to show suggested follow-on agents for your prompt";
-        art.setAttribute("aria-label", `${i + 1}. ${title}, Gemini fit ${fitLabel}`);
-        const em = document.createElement("div");
-        em.className = "emoji";
-        em.textContent = m.emoji || "📄";
-        em.setAttribute("aria-hidden", "true");
-        const bodyDiv = document.createElement("div");
-        bodyDiv.className = "card-body";
-        const h = document.createElement("h3");
-        h.textContent = `${String(i + 1).padStart(2, "0")} · ${title}`;
-        const why = document.createElement("p");
-        why.className = "vibe";
-        why.textContent = m.why || "";
-        const pathEl = document.createElement("div");
-        pathEl.className = "path";
-        pathEl.textContent = m.path;
-        pathEl.title = m.path;
-        bodyDiv.appendChild(h);
-        bodyDiv.appendChild(why);
-        if (m.caveat) {
-          const c = document.createElement("p");
-          c.className = "vibe";
-          c.style.marginTop = "0.25rem";
-          c.textContent = "caveat: " + m.caveat;
-          bodyDiv.appendChild(c);
-        }
-        bodyDiv.appendChild(pathEl);
-        const aside = document.createElement("div");
-        aside.className = "card-aside";
-        const sc = document.createElement("div");
-        sc.className = "score";
-        sc.setAttribute("aria-hidden", "true");
-        sc.textContent = (m.fit_score != null ? m.fit_score : "—") + " / 100";
-        const links = document.createElement("div");
-        links.className = "links";
-        const gh = document.createElement("a");
-        gh.href = ghLinkWithBase(m.path, ghBase);
-        gh.target = "_blank";
-        gh.rel = "noopener noreferrer";
-        gh.textContent = "github";
-        links.appendChild(gh);
-        const loc = document.createElement("button");
-        loc.type = "button";
-        loc.className = "js-agent-source";
-        loc.dataset.path = m.path;
-        loc.textContent = "local";
-        loc.title = "View full markdown (copy)";
-        links.appendChild(loc);
-        const copyBtn = document.createElement("button");
-        wireMatchCopyBtn(copyBtn, {
-          goal,
-          extra,
-          mode: "gemini",
-          summary: summaryPlain,
-          orchestration: orchPlain,
+        const caveatStr = m.caveat ? String(m.caveat).trim() : "";
+        const art = buildMatchCard({
           rank: i + 1,
-          name: m.name || m.path,
-          path: m.path,
-          fit_score: m.fit_score != null ? m.fit_score : null,
-          heuristic_score: null,
+          emoji: m.emoji || "📄",
+          title,
           why: (m.why || "").trim(),
-          caveat: m.caveat ? String(m.caveat).trim() : "",
-          github: ghLinkWithBase(m.path, ghBase),
+          caveat: caveatStr,
+          path: m.path,
+          fitScore: m.fit_score != null ? m.fit_score : null,
+          ghBase,
+          rankerKind: "gemini",
+          copyCtx: {
+            goal,
+            extra,
+            mode: "gemini",
+            summary: summaryPlain,
+            orchestration: orchPlain,
+            rank: i + 1,
+            name: m.name || m.path,
+            path: m.path,
+            fit_score: m.fit_score != null ? m.fit_score : null,
+            heuristic_score: null,
+            why: (m.why || "").trim(),
+            caveat: caveatStr,
+            github: ghLinkWithBase(m.path, ghBase),
+          },
         });
-        aside.appendChild(sc);
-        aside.appendChild(copyBtn);
-        aside.appendChild(links);
-        art.appendChild(em);
-        art.appendChild(bodyDiv);
-        art.appendChild(aside);
         resultsEl.appendChild(art);
       });
     } finally {
@@ -4189,24 +4644,36 @@
   function render() {
     geminiSummaryEl.hidden = true;
     geminiSummaryEl.innerHTML = "";
+    orchEl.hidden = true;
+    orchEl.innerHTML = "";
+    const goalH = goalEl.value.trim();
+    const extraH = (document.getElementById("extra-ctx").value || "").trim();
+    const queryFull = [goalH, extraH].filter(Boolean).join("\n");
     const { list, multiDivision } = scoreAgents();
     resultsEl.innerHTML = "";
+    const selectedCats = Array.from(divisionBox.querySelectorAll("input:checked")).map((el) => el.dataset.category);
     const orch = CATALOG.find((a) => /orchestrator/i.test(a.name) && /specialized\//.test(a.path));
+    let orchPlainOffline = "";
     if (multiDivision && orch) {
+      const rationaleParts = [];
+      if (selectedCats.length >= 3) rationaleParts.push(`${selectedCats.length} divisions filtered`);
+      if (/\borchestrat|workflow|pipeline|multiple agents|handoff|full stack project\b/i.test(queryFull)) {
+        rationaleParts.push("wording suggests multi-agent orchestration or handoffs");
+      }
+      const rationaleCore =
+        (rationaleParts.length ? rationaleParts.join("; ") + ". " : "") +
+        `Consider ${orch.name} for sequencing and review.`;
+      const vibeShort = (orch.vibe || orch.description || "").slice(0, 140).trim();
+      orchPlainOffline = (vibeShort ? rationaleCore + " " + vibeShort : rationaleCore).replace(/\s+/g, " ").trim();
       orchEl.hidden = false;
       orchEl.innerHTML =
-        "<strong>multi-track detected</strong> · consider <strong>" +
-        escapeHtml(orch.name) +
-        "</strong> — " +
-        escapeHtml(orch.vibe || orch.description.slice(0, 120)) +
+        "<strong>orchestration</strong> · " +
+        escapeHtml(orchPlainOffline) +
         ' <span class="links"><a target="_blank" rel="noopener noreferrer" href="' +
         escapeHtml(ghLink(orch.path)) +
         '">github</a> <button type="button" class="js-agent-source" data-path="' +
         escapeHtml(orch.path) +
         '">local</button></span>';
-    } else {
-      orchEl.hidden = true;
-      orchEl.innerHTML = "";
     }
 
     if (!list.length) {
@@ -4215,86 +4682,46 @@
       return;
     }
 
+    const summaryPlain = offlineSummaryFromList(list, queryFull);
+    geminiSummaryEl.hidden = false;
+    geminiSummaryEl.innerHTML = "<strong>summary</strong> · " + escapeHtml(summaryPlain);
+
     metaEl.textContent =
       list[0].score === 0
-        ? "no strong signal — showing balanced shortlist. add divisions or a richer description."
-        : "higher score ⇒ stronger match (heuristic, not magic).";
+        ? "no strong signal — showing balanced shortlist. add divisions, extra context, or try Gemini."
+        : "offline rank: IDF-weighted terms + phrase hints (not Gemini). aside scores are rescaled within this list for readability.";
 
-    const goalH = goalEl.value.trim();
-    const extraH = (document.getElementById("extra-ctx").value || "").trim();
-    let orchExport = "";
-    if (!orchEl.hidden && orchEl.textContent) {
-      orchExport = orchEl.textContent.replace(/\s+/g, " ").trim();
-    }
-    list.forEach(({ agent, score }, i) => {
-      const art = document.createElement("article");
-      art.className = "card";
-      art.dataset.path = agent.path;
-      art.dataset.ghBase = "";
-      art.style.cursor = "pointer";
-      art.title = "Click to show suggested follow-on agents for your prompt";
-      art.setAttribute("aria-label", `${agent.name}, heuristic score ${Math.round(score)}`);
-      const em = document.createElement("div");
-      em.className = "emoji";
-      em.textContent = agent.emoji || "📄";
-      em.setAttribute("aria-hidden", "true");
-      const body = document.createElement("div");
-      body.className = "card-body";
-      const h = document.createElement("h3");
-      h.textContent = `${String(i + 1).padStart(2, "0")} · ${agent.name}`;
-      const v = document.createElement("p");
-      v.className = "vibe";
-      v.textContent = agent.vibe || agent.description.slice(0, 160) + (agent.description.length > 160 ? "…" : "");
-      const p = document.createElement("div");
-      p.className = "path";
-      p.textContent = agent.path;
-      p.title = agent.path;
-      body.appendChild(h);
-      body.appendChild(v);
-      body.appendChild(p);
-      const aside = document.createElement("div");
-      aside.className = "card-aside";
-      const sc = document.createElement("div");
-      sc.className = "score";
-      sc.setAttribute("aria-hidden", "true");
-      sc.textContent = "score " + Math.round(score);
-      const links = document.createElement("div");
-      links.className = "links";
-      const gh = document.createElement("a");
-      gh.href = ghLink(agent.path);
-      gh.target = "_blank";
-      gh.rel = "noopener noreferrer";
-      gh.textContent = "github";
-      links.appendChild(gh);
-      const loc = document.createElement("button");
-      loc.type = "button";
-      loc.className = "js-agent-source";
-      loc.dataset.path = agent.path;
-      loc.textContent = "local";
-      loc.title = "View full markdown (copy)";
-      links.appendChild(loc);
-      const copyBtn = document.createElement("button");
-      wireMatchCopyBtn(copyBtn, {
-        goal: goalH,
-        extra: extraH,
-        mode: "heuristic",
-        summary: "",
-        orchestration: orchExport,
+    const batchCaveat = offlineCaveatForList(list, queryFull);
+    list.forEach((row, i) => {
+      const { agent, score, evidence, fitDisplay } = row;
+      const why = offlineWhyFromEvidence(evidence, agent);
+      const cardCaveat = i === 0 ? batchCaveat : "";
+      const art = buildMatchCard({
         rank: i + 1,
-        name: agent.name,
+        emoji: agent.emoji || "📄",
+        title: agent.name,
+        why,
+        caveat: cardCaveat,
         path: agent.path,
-        fit_score: null,
-        heuristic_score: Math.round(score),
-        why: (agent.vibe || agent.description || "").trim(),
-        caveat: "",
-        github: ghLink(agent.path),
+        fitScore: fitDisplay,
+        ghBase: "",
+        rankerKind: "offline",
+        copyCtx: {
+          goal: goalH,
+          extra: extraH,
+          mode: "heuristic",
+          summary: summaryPlain,
+          orchestration: orchPlainOffline,
+          rank: i + 1,
+          name: agent.name,
+          path: agent.path,
+          fit_score: fitDisplay,
+          heuristic_score: Math.round(score),
+          why,
+          caveat: cardCaveat,
+          github: ghLink(agent.path),
+        },
       });
-      aside.appendChild(sc);
-      aside.appendChild(copyBtn);
-      aside.appendChild(links);
-      art.appendChild(em);
-      art.appendChild(body);
-      art.appendChild(aside);
       resultsEl.appendChild(art);
     });
   }
@@ -4306,6 +4733,287 @@
   function escapeHtml(s) {
     return s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   }
+
+  function stripFrontmatter(md) {
+    const s = String(md || "").trimStart();
+    if (!s.startsWith("---")) return String(md || "");
+    const end = s.indexOf("\n---", 3);
+    if (end === -1) return String(md || "");
+    return s.slice(end + 4).trim();
+  }
+
+  function parseH2Sections(md) {
+    const body = stripFrontmatter(md);
+    const parts = body.split(/^##\s+/m);
+    const preamble = (parts[0] || "").trim();
+    const sections = [];
+    for (let i = 1; i < parts.length; i++) {
+      const chunk = parts[i];
+      const nl = chunk.indexOf("\n");
+      const title = (nl === -1 ? chunk : chunk.slice(0, nl)).trim();
+      const content = nl === -1 ? "" : chunk.slice(nl + 1).trim();
+      sections.push({ title, content });
+    }
+    return { preamble, sections };
+  }
+
+  function bucketForSectionTitle(titleRaw) {
+    const t = String(titleRaw || "")
+      .replace(/[\uFE00-\uFE0F\u200d]/g, "")
+      .replace(/[\u{1F300}-\u{1FAFF}]/gu, "")
+      .replace(/[^\p{L}\p{N}\s]/gu, " ")
+      .toLowerCase()
+      .replace(/\s+/g, " ")
+      .trim();
+    if (!t) return null;
+    if (/\bcritical rules\b|must follow|non-negotiable|guardrails\b/.test(t)) return null;
+    if (/\bdeliverable|outputs?\b|examples?\b|templates?\b|checklists?\b|playbooks?\b|specifications?\b|artifacts\b|snippets?\b|design doc/.test(t))
+      return "outputs";
+    if (/\bwhen to\b|\bwhen you\b|\bideal\b|\bbest for\b|suitability|prerequisites?\b|who should|scenarios for/.test(t)) return "when";
+    if (/\bidentity\b|\bmemory\b|\bmission\b|\boverview\b|personality|\brole\b|capabilities\b|expertise|what you do|objectives/.test(t)) return "good";
+    return null;
+  }
+
+  function stripInlineMd(s) {
+    return String(s).replace(/\*\*([^*]+)\*\*/g, "$1").replace(/\*([^*]+)\*/g, "$1");
+  }
+
+  function collectBulletLines(text, max) {
+    const items = [];
+    for (const line of String(text).split(/\r?\n/)) {
+      const m = line.match(/^\s*[\-\*]\s+(.+)/);
+      if (m) {
+        const raw = stripInlineMd(m[1]).replace(/\[[ x]\]\s*/i, "").trim();
+        if (raw.length > 2) items.push(raw);
+      }
+      if (items.length >= max) break;
+    }
+    return items;
+  }
+
+  function extractCodeBlocks(text, max) {
+    const out = [];
+    const re = /```(\w*)\r?\n([\s\S]*?)```/g;
+    let m;
+    while ((m = re.exec(text)) && out.length < max) {
+      let code = m[2].trim();
+      if (code.length > 720) code = code.slice(0, 719) + "\n…";
+      out.push({ lang: (m[1] || "example").trim() || "example", code });
+    }
+    return out;
+  }
+
+  function removeCodeFences(text) {
+    return String(text).replace(/```[\s\S]*?```/g, "\n");
+  }
+
+  function preambleLead(preamble) {
+    const t = String(preamble || "")
+      .replace(/^#\s+[^\n]+\n+/, "")
+      .trim();
+    const paras = t
+      .split(/\n\n+/)
+      .map((p) => p.trim())
+      .filter((p) => p && !p.startsWith("#"));
+    const chunk = paras.slice(0, 2).join("\n\n");
+    return chunk.length > 720 ? chunk.slice(0, 719) + "…" : chunk;
+  }
+
+  function inferSpotlightParts(agent) {
+    const md = typeof agent.source === "string" ? agent.source : "";
+    const { preamble, sections } = parseH2Sections(md);
+    let goodTxt = "";
+    let outTxt = "";
+    let whenTxt = "";
+    for (const { title, content } of sections) {
+      const b = bucketForSectionTitle(title);
+      if (b === "good") goodTxt += "\n\n" + content;
+      else if (b === "outputs") outTxt += "\n\n" + content;
+      else if (b === "when") whenTxt += "\n\n" + content;
+    }
+    const preLead = preambleLead(preamble);
+    const goodBullets = collectBulletLines(goodTxt + "\n" + preLead, 14);
+    const outPlain = removeCodeFences(outTxt);
+    const outBullets = collectBulletLines(outPlain, 12);
+    const whenBullets = collectBulletLines(whenTxt, 10);
+    let codes = extractCodeBlocks(outTxt, 2);
+    if (!codes.length) codes = extractCodeBlocks(goodTxt, 1);
+    return { goodBullets, outBullets, whenBullets, codes, preLead };
+  }
+
+  function appendParagraph(parent, text, className) {
+    if (!text || !String(text).trim()) return;
+    const p = document.createElement("p");
+    if (className) p.className = className;
+    p.textContent = String(text).trim();
+    parent.appendChild(p);
+  }
+
+  function appendBulletList(parent, items) {
+    if (!items || !items.length) return;
+    const ul = document.createElement("ul");
+    for (const it of items) {
+      const li = document.createElement("li");
+      li.textContent = it;
+      ul.appendChild(li);
+    }
+    parent.appendChild(ul);
+  }
+
+  function makeSpotlightCard(title, buildBody) {
+    const card = document.createElement("article");
+    card.className = "spotlight-card";
+    const h = document.createElement("h3");
+    h.textContent = title;
+    card.appendChild(h);
+    const inner = document.createElement("div");
+    inner.className = "spotlight-body";
+    buildBody(inner);
+    card.appendChild(inner);
+    return card;
+  }
+
+  function closeAgentSpotlight() {
+    const mast = document.getElementById("masthead");
+    const ws = document.getElementById("main-workspace");
+    const sp = document.getElementById("agent-spotlight");
+    if (sp) {
+      sp.classList.remove("is-open");
+      sp.setAttribute("aria-hidden", "true");
+    }
+    if (mast) {
+      mast.style.display = "";
+      mast.removeAttribute("aria-hidden");
+    }
+    if (ws) {
+      ws.style.display = "";
+      ws.removeAttribute("aria-hidden");
+    }
+  }
+
+  function openAgentSpotlight(agent) {
+    const mast = document.getElementById("masthead");
+    const ws = document.getElementById("main-workspace");
+    const sp = document.getElementById("agent-spotlight");
+    const bodyEl = document.getElementById("spotlight-body");
+    if (!sp || !bodyEl || !agent) return;
+    const parts = inferSpotlightParts(agent);
+    bodyEl.replaceChildren();
+
+    const hero = document.createElement("div");
+    hero.className = "agent-spotlight-hero";
+    const emo = document.createElement("div");
+    emo.className = "agent-spotlight-emoji";
+    emo.setAttribute("aria-hidden", "true");
+    emo.textContent = agent.emoji || "📄";
+    const ht = document.createElement("div");
+    ht.className = "agent-spotlight-hero-text";
+    const h2 = document.createElement("h2");
+    h2.className = "agent-spotlight-title";
+    h2.id = "spotlight-title";
+    h2.textContent = agent.name;
+    const pathP = document.createElement("p");
+    pathP.className = "agent-spotlight-path";
+    pathP.textContent = agent.path;
+    const meta = document.createElement("p");
+    meta.className = "agent-spotlight-meta";
+    meta.textContent = (DIVISION_LABELS[agent.category] || agent.category) + " · agency catalog entry";
+    const actions = document.createElement("div");
+    actions.className = "agent-spotlight-actions";
+    const gh = document.createElement("a");
+    gh.href = ghLink(agent.path);
+    gh.target = "_blank";
+    gh.rel = "noopener noreferrer";
+    gh.textContent = "open on github";
+    const loc = document.createElement("button");
+    loc.type = "button";
+    loc.className = "js-agent-source";
+    loc.dataset.path = agent.path;
+    loc.textContent = "view full markdown";
+    loc.title = "Copy-ready source";
+    actions.appendChild(gh);
+    actions.appendChild(document.createTextNode(" · "));
+    actions.appendChild(loc);
+    ht.appendChild(h2);
+    ht.appendChild(pathP);
+    ht.appendChild(meta);
+    ht.appendChild(actions);
+    hero.appendChild(emo);
+    hero.appendChild(ht);
+    bodyEl.appendChild(hero);
+
+    const grid = document.createElement("div");
+    grid.className = "agent-spotlight-grid";
+
+    grid.appendChild(
+      makeSpotlightCard("What they're good for", (inner) => {
+        appendParagraph(inner, agent.description);
+        const v = (agent.vibe || "").trim();
+        if (v && v !== (agent.description || "").trim()) appendParagraph(inner, v);
+        if (parts.preLead) appendParagraph(inner, parts.preLead);
+        if (parts.goodBullets.length) appendBulletList(inner, parts.goodBullets);
+        if (!inner.childNodes.length) {
+          const em = document.createElement("p");
+          em.className = "spotlight-empty";
+          em.textContent = "No extra narrative in the markdown — use the description above.";
+          inner.appendChild(em);
+        }
+      })
+    );
+
+    grid.appendChild(
+      makeSpotlightCard("Outputs & examples", (inner) => {
+        appendBulletList(inner, parts.outBullets);
+        for (const block of parts.codes) {
+          const wrap = document.createElement("div");
+          const lab = document.createElement("span");
+          lab.className = "spotlight-lang";
+          lab.textContent = block.lang;
+          const pre = document.createElement("pre");
+          pre.textContent = block.code;
+          wrap.appendChild(lab);
+          wrap.appendChild(pre);
+          inner.appendChild(wrap);
+        }
+        if (!parts.outBullets.length && !parts.codes.length) {
+          const em = document.createElement("p");
+          em.className = "spotlight-empty";
+          em.textContent =
+            "Structured templates and code samples live in the agent file — open \"view full markdown\" to paste into your workflow, or ask Gemini to match when you describe a concrete deliverable.";
+          inner.appendChild(em);
+        }
+      })
+    );
+
+    const catLabel = DIVISION_LABELS[agent.category] || agent.category;
+    grid.appendChild(
+      makeSpotlightCard("When to use this agent", (inner) => {
+        const vb = (agent.vibe || "").trim();
+        if (vb) appendParagraph(inner, `Vibe: ${vb}`);
+        appendBulletList(inner, parts.whenBullets);
+        appendParagraph(
+          inner,
+          `Reach for this profile when the work clearly sits in ${catLabel} and you want the behaviors, guardrails, and artifacts implied by the repo's agent contract — not for unrelated domains where a different specialist will rank higher.`
+        );
+      })
+    );
+
+    bodyEl.appendChild(grid);
+
+    if (mast) {
+      mast.style.display = "none";
+      mast.setAttribute("aria-hidden", "true");
+    }
+    if (ws) {
+      ws.style.display = "none";
+      ws.setAttribute("aria-hidden", "true");
+    }
+    sp.classList.add("is-open");
+    sp.setAttribute("aria-hidden", "false");
+    document.getElementById("spotlight-dismiss")?.focus();
+  }
+
+  document.getElementById("spotlight-dismiss")?.addEventListener("click", () => closeAgentSpotlight());
 
   function geminiAvailable() {
     if (isFile || !useAiRankingEl || !useAiRankingEl.checked) return false;
@@ -4348,6 +5056,7 @@
     orchEl.hidden = true;
     orchEl.innerHTML = "";
     updateFilterBadge();
+    closeAgentSpotlight();
   });
 
   function initSettingsPanelActions() {

@@ -16,7 +16,8 @@ Source of truth: `agent-matchmaker/webapp.py`, `agent-matchmaker/matchmaker_lib.
 | WF-06 | Hallucination guard (filter unknown paths, dedupe, clamp fit_score) | `matchmaker_lib.validate_and_merge` | Post-Gemini | — |
 | WF-07 | Frontend bootstrap (catalog load, health probe, runtime chip) | `index.template.html` IIFE | Page load | [WORKFLOW-07](./WORKFLOW-07-frontend-bootstrap.md) |
 | WF-08 | Frontend submit — Gemini path (`renderGemini`) | `index.template.html::renderGemini` | Click "ask gemini" / Cmd+Enter | — |
-| WF-09 | Frontend submit — offline heuristic (`render` + `scoreAgents`) | `index.template.html::render` | Click "find agents (offline)" | — |
+| WF-09 | Frontend submit — offline heuristic (`render` + `scoreAgents`) | `index.template.html::render` | Click "find agents (offline)" | [WORKFLOW-09](./WORKFLOW-09-offline-heuristic.md) |
+| REF-01 | Dual trace — front-to-back and back-to-front narratives | `WORKFLOW-MATCHMAKER-DUAL-TRACE.md` | Reader / onboarding | [WORKFLOW-MATCHMAKER-DUAL-TRACE](./WORKFLOW-MATCHMAKER-DUAL-TRACE.md) |
 | WF-10 | Frontend clear/reset state | `btn-clear` handler | Click "clear" | — |
 | WF-11 | Gemini key persistence to `localStorage` | `persistGeminiKeyFromInput` | `apiKeyEl` blur | — |
 | WF-12 | Runtime panel open/close + focus trap | `openRuntime`/`closeRuntime`/keydown Tab+Esc | Chip click / backdrop click / Esc | — |
@@ -48,7 +49,7 @@ Source of truth: `agent-matchmaker/webapp.py`, `agent-matchmaker/matchmaker_lib.
 ### `index.template.html` (single-page IIFE)
 - WF-07 bootstrap (catalog load precedence: `fetch(catalog.json)` → `window.__agentCatalogB64`)
 - WF-08 Gemini path
-- WF-09 heuristic path (`scoreAgents`, division & tag weights, multi-division orchestrator callout)
+- WF-09 heuristic path (`rankAllAgents`, `scoreAgents`, `attachOfflineFitScores`, explainability helpers, `buildMatchCard`, summary + orchestration parity)
 - WF-10 clear
 - WF-11 localStorage key `agency-agents:matchmaker:gemini-api-key`
 - WF-12 runtime modal
@@ -106,7 +107,7 @@ States observable from outside the system.
 | `UI_QUERYING` | browser | submit fired, `aria-busy=true`, btn disabled | response parsed / network error | meta: "querying gemini…" |
 | `UI_ERROR` | browser | `res.ok=false` / `data.ok=false` / fetch throw / JSON parse throw | resubmit / clear | meta shows error; results empty card |
 | `UI_RESULTS_GEMINI` | browser | `data.ok=true` | clear / new submit | cards with `N/100` fit scores, optional summary/orchestrator banner |
-| `UI_RESULTS_HEURISTIC` | browser | offline path returns list | clear / new submit | cards labelled "score N" |
+| `UI_RESULTS_HEURISTIC` | browser | offline path returns list | clear / new submit | cards with rescaled `N/100` fit, summary strip, optional orchestration (WF-09) |
 | `UI_FILE_MODE` | browser | `location.protocol==='file:'` | navigating to http URL | chip "file:// mode"; AI toggle disabled |
 | `UI_RUNTIME_OPEN` | browser | chip click / AI toggle while `serverGeminiKeyCached=false` | backdrop click / Esc / chip re-click | modal visible, focus trapped |
 
@@ -119,3 +120,8 @@ Top-3 specified in this pass (by blast radius / failure-mode density):
 1. [WORKFLOW-04](./WORKFLOW-04-api-match.md) — `POST /api/match` end-to-end. Highest branching; touches key resolution, Gemini, hallucination guard, SDK-missing, catalog missing.
 2. [WORKFLOW-01](./WORKFLOW-01-server-startup.md) — Startup + catalog bootstrap. Gates every other runtime workflow; can `SystemExit(1)` on two distinct failure modes.
 3. [WORKFLOW-07](./WORKFLOW-07-frontend-bootstrap.md) — Frontend bootstrap. Determines whether user can see/use Gemini at all; three-way mode split (http+ready, http+degraded, file://).
+
+Additional specs:
+
+4. [WORKFLOW-09](./WORKFLOW-09-offline-heuristic.md) — Offline heuristic ranking, explainability, and UI parity with the Gemini card layout.
+5. [WORKFLOW-MATCHMAKER-DUAL-TRACE](./WORKFLOW-MATCHMAKER-DUAL-TRACE.md) — Front-to-back and back-to-front flowcharts plus a crosswalk table.
