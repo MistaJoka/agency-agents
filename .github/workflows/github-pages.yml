@@ -1,0 +1,71 @@
+# Builds the static Agent Matchmaker and deploys to GitHub Pages.
+# After the first run: Settings → Pages → set source to "GitHub Actions".
+name: Deploy Agent Matchmaker to GitHub Pages
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "academic/**"
+      - "design/**"
+      - "engineering/**"
+      - "finance/**"
+      - "game-development/**"
+      - "marketing/**"
+      - "paid-media/**"
+      - "product/**"
+      - "project-management/**"
+      - "sales/**"
+      - "spatial-computing/**"
+      - "specialized/**"
+      - "strategy/**"
+      - "support/**"
+      - "testing/**"
+      - "agent-matchmaker/**"
+      - "scripts/build_agent_matchmaker.py"
+      - ".github/workflows/github-pages.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Build static catalog and index.html
+        run: python3 scripts/build_agent_matchmaker.py
+
+      - name: Ensure Jekyll is disabled for static files
+        run: touch agent-matchmaker/.nojekyll
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: agent-matchmaker
+
+  deploy:
+    if: github.ref == 'refs/heads/main'
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deploy
+        uses: actions/deploy-pages@v4

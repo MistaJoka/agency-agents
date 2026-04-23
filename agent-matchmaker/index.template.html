@@ -2519,6 +2519,12 @@
 (async function () {
   const isFile = window.location.protocol === "file:";
 
+  /** Resolve e.g. /api/health relative to this page (GitHub project Pages uses /user/repo/… not domain root). */
+  function resolveApi(absolutePath) {
+    const p = (absolutePath || "").replace(/^\//, "");
+    return new URL(p, window.location.href).href;
+  }
+
   async function loadCatalog() {
     if (!isFile && /^https?:$/i.test(window.location.protocol)) {
       try {
@@ -2813,7 +2819,7 @@
     return !!(el && el.value.trim());
   }
 
-  /** Keep chip + status aligned with /api/health and the runtime API-key field */
+  /** Keep chip + status aligned with the local /api/health and the runtime API-key field */
   function syncGeminiIndicator() {
     if (!aiServerStatus || !useAiRankingEl) return;
     if (isFile) return;
@@ -2865,14 +2871,14 @@
   }
 
   if (!isFile && aiServerStatus && useAiRankingEl) {
-    fetch(new URL("/api/health", window.location.href).href, { cache: "no-store" })
+    fetch(resolveApi("/api/health"), { cache: "no-store" })
       .then((r) => (r.ok ? r.json() : null))
       .then((h) => {
         geminiHealthResolved = true;
         if (!h || !h.ok) {
           if (aiServerStatus) {
             aiServerStatus.textContent =
-              "cannot reach /api/health — open this page via webapp.py (http://), not file://";
+              "cannot reach the local API (webapp.py /api/health) — use http:// from webapp, not file://, for Gemini";
           }
           setRuntimeLauncherState("err");
           updateMatchButton();
@@ -3222,7 +3228,7 @@
       );
       return;
     }
-    const url = new URL("/api/agent-source", window.location.href);
+    const url = new URL("api/agent-source", window.location.href);
     url.searchParams.set("path", path);
     openAgentSourceModal(path, "Loading…");
     const body = document.getElementById("agent-source-body");
@@ -3850,7 +3856,7 @@
       });
       let res;
       try {
-        res = await fetch("/api/match", {
+        res = await fetch(resolveApi("/api/match"), {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(body),

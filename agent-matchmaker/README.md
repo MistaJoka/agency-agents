@@ -2,6 +2,18 @@
 
 **Docs:** [GOALS.md](GOALS.md) (polish vs replace vs MCP) · [RECOMMENDED_AGENTS.md](RECOMMENDED_AGENTS.md) (which Agency agents to activate while building this tool)
 
+## GitHub Pages (public demo)
+
+This repo includes a workflow ([`.github/workflows/github-pages.yml`](../.github/workflows/github-pages.yml)) that rebuilds the static `index.html` + `catalog.json` and deploys the `agent-matchmaker/` folder to [GitHub Pages](https://docs.github.com/en/pages).
+
+1. In the repository on GitHub, open **Settings → Pages** (or **Environments** if prompted).
+2. Under **Build and deployment**, set **Source** to **GitHub Actions** (not a branch / `docs` folder).
+3. Push to `main` (or run the workflow manually). The live URL is typically `https://<user>.github.io/<repo>/` (project site), e.g. `https://yourname.github.io/agency-agents/`.
+
+**On Pages:** search, heuristics, and the embedded catalog work in the browser. The **local-only** features still need your machine: `POST /api/match` (Gemini) and `GET /api/agent-source` require `python3 agent-matchmaker/webapp.py` on `http://127.0.0.1`, not a static host.
+
+---
+
 Two ways to pick agents from this repo:
 
 1. **Static page** — open `agent-matchmaker/index.html` in a browser (offline, heuristic ranking). Regenerate with `python3 scripts/build_agent_matchmaker.py`.
