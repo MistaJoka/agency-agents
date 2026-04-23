@@ -27,6 +27,11 @@ yarn-error.log*
 package-lock.json
 yarn.lock
 
+# Local secrets (e.g. Gemini API key for agent-matchmaker)
+.env
+.env.*
+.gemini_api_key
+
 # Python (if adding scripts)
 __pycache__/
 *.py[cod]
@@ -37,6 +42,7 @@ env/
 venv/
 ENV/
 .venv
+.venv-qa/
 
 # Logs
 *.log
@@ -78,3 +84,6 @@ integrations/qwen/agents/
 integrations/kimi/*/
 !integrations/openclaw/README.md
 !integrations/kimi/README.md
+
+# Agent Matchmaker local QA (scripts/qa-reality-capture.sh)
+agent-matchmaker/qa-screenshots/

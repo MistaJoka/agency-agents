@@ -1,0 +1,4 @@
+# Optional: visual evidence for scripts/qa-reality-capture.sh
+#   pip install -r agent-matchmaker/requirements-qa.txt
+#   python3 -m playwright install chromium
+playwright>=1.40.0

@@ -1,0 +1,4181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#08090b" />
+  <title>matchmaker · agency://console</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=JetBrains+Mono:wght@400;500;600;700&display=swap"
+    rel="stylesheet"
+    media="print"
+    onload="this.media='all'"
+  />
+  <noscript>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=JetBrains+Mono:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+  </noscript>
+  <style>
+    :root {
+      --bg-0: #06070a;
+      --bg-1: #0a0b0f;
+      --bg-2: #0f1015;
+      --surface: #13141a;
+      --surface-2: #191b22;
+      --elev: #1f222b;
+      --line: rgba(255, 255, 255, 0.06);
+      --line-2: rgba(255, 255, 255, 0.12);
+      --line-3: rgba(255, 255, 255, 0.22);
+      --text: #e9ebf0;
+      --text-dim: #c1c4cc;
+      --muted: #838894;
+      --muted-2: #5a5e6a;
+      --accent: #c7ff4d;           /* phosphor */
+      --accent-dim: #9ecc2f;
+      --accent-wash: rgba(199, 255, 77, 0.12);
+      --violet: #9a7cff;
+      --violet-wash: rgba(154, 124, 255, 0.14);
+      --danger: #ff6a6a;
+      --ok: #4dd694;
+      --ok-wash: rgba(77, 214, 148, 0.1);
+      --radius: 14px;
+      --radius-sm: 8px;
+      --radius-xs: 6px;
+      --font-ui: "Instrument Sans", ui-sans-serif, system-ui, sans-serif;
+      --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+      --shadow-1: 0 1px 0 rgba(255, 255, 255, 0.04) inset, 0 0 0 1px var(--line);
+      --shadow-2: 0 20px 60px -20px rgba(0, 0, 0, 0.6), 0 0 0 1px var(--line);
+    }
+
+    * { box-sizing: border-box; }
+
+    html {
+      scroll-behavior: smooth;
+      height: 100%;
+      min-height: 100dvh;
+      background: var(--bg-0);
+      overflow: hidden;
+    }
+
+    body {
+      margin: 0;
+      height: 100%;
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      font-family: var(--font-ui);
+      font-size: clamp(13px, 2.8vw + 0.35rem, 14.5px);
+      font-weight: 400;
+      letter-spacing: -0.005em;
+      color: var(--text);
+      line-height: 1.5;
+      background: var(--bg-0);
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* ────────── shell / grid backdrop ────────── */
+    .canvas {
+      position: relative;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      overflow-x: hidden;
+      background:
+        radial-gradient(900px 500px at 85% -10%, rgba(154, 124, 255, 0.08), transparent 60%),
+        radial-gradient(700px 400px at -5% 10%, rgba(199, 255, 77, 0.05), transparent 60%),
+        var(--bg-0);
+    }
+
+    /* faint grid lines, terminal-adjacent */
+    .canvas::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background-image:
+        linear-gradient(to right, rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+      background-size: 64px 64px;
+      mask-image: radial-gradient(ellipse 80% 70% at 50% 40%, black 40%, transparent 100%);
+      -webkit-mask-image: radial-gradient(ellipse 80% 70% at 50% 40%, black 40%, transparent 100%);
+      z-index: 0;
+    }
+
+    .orb { display: none; } /* retired from prior skin */
+
+    .wrap {
+      position: relative;
+      z-index: 1;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      width: 100%;
+      max-width: 1320px;
+      margin: 0 auto;
+      padding:
+        max(env(safe-area-inset-top, 0px), clamp(0.75rem, 2vw, 1.1rem))
+        max(env(safe-area-inset-right, 0px), clamp(0.85rem, 3vw, 1.5rem))
+        max(env(safe-area-inset-bottom, 0px), clamp(0.85rem, 2.5vw, 1.25rem))
+        max(env(safe-area-inset-left, 0px), clamp(0.85rem, 3vw, 1.5rem));
+    }
+
+    /* ────────── app shell + explore sidebar ────────── */
+    :root {
+      --sidebar-w: min(360px, 42vw);
+      --sidebar-dur: 0.38s;
+      --sidebar-ease: cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .app-layout {
+      position: relative;
+      flex: 1;
+      display: flex;
+      flex-direction: row;
+      align-items: stretch;
+      min-height: 0;
+      width: 100%;
+    }
+
+    .explore-sidebar {
+      flex: 0 0 auto;
+      width: 0;
+      min-width: 0;
+      overflow: hidden;
+      border-right: 1px solid transparent;
+      background: var(--bg-1);
+      transition:
+        width var(--sidebar-dur) var(--sidebar-ease),
+        border-color var(--sidebar-dur) var(--sidebar-ease);
+    }
+
+    .explore-sidebar.is-open {
+      width: var(--sidebar-w);
+      border-right-color: var(--line-2);
+      min-height: 0;
+      align-self: stretch;
+    }
+
+    .explore-inner {
+      position: relative;
+      width: var(--sidebar-w);
+      height: 100%;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      padding: 0.65rem 0.75rem 0.75rem;
+    }
+
+    /* Drag-to-resize (width stored in localStorage; --sidebar-w on .canvas) */
+    .explore-resize {
+      position: absolute;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      width: 5px;
+      z-index: 4;
+      cursor: col-resize;
+      touch-action: none;
+      background: transparent;
+    }
+    .explore-resize::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      right: 2px;
+      width: 1px;
+      background: var(--line-2);
+      opacity: 0.85;
+      transition: background 0.15s ease, opacity 0.15s ease, width 0.15s ease;
+    }
+    .explore-resize:hover::after,
+    .explore-resize:focus-visible::after {
+      width: 2px;
+      background: var(--accent);
+      opacity: 1;
+    }
+    .explore-resize:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: -1px;
+    }
+    .explore-sidebar.is-resizing {
+      transition: none;
+    }
+    .explore-sidebar.is-resizing.is-open {
+      transition: border-color var(--sidebar-dur) var(--sidebar-ease);
+    }
+
+    /* Thin scrollbars inside explore */
+    .explore-cats,
+    .explore-list-wrap {
+      scrollbar-width: thin;
+      scrollbar-color: rgba(255, 255, 255, 0.22) transparent;
+    }
+    .explore-cats::-webkit-scrollbar,
+    .explore-list-wrap::-webkit-scrollbar {
+      width: 4px;
+      height: 4px;
+    }
+    .explore-cats::-webkit-scrollbar-thumb,
+    .explore-list-wrap::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.22);
+      border-radius: 999px;
+    }
+    .explore-cats::-webkit-scrollbar-thumb:hover,
+    .explore-list-wrap::-webkit-scrollbar-thumb:hover {
+      background: rgba(255, 255, 255, 0.35);
+    }
+    .explore-cats::-webkit-scrollbar-track,
+    .explore-list-wrap::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .explore-head {
+      flex-shrink: 0;
+      margin-bottom: 0.55rem;
+    }
+
+    .explore-title {
+      margin: 0;
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--text);
+    }
+
+    .explore-sub {
+      margin: 0.25rem 0 0;
+      font-size: 0.72rem;
+      line-height: 1.45;
+      color: var(--muted-2);
+    }
+
+    .explore-controls {
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 0.45rem;
+      margin-bottom: 0.45rem;
+    }
+
+    .explore-search-label { display: block; margin: 0; }
+
+    .explore-search {
+      width: 100%;
+      font-size: 0.82rem;
+      padding: 0.4rem 0.5rem;
+    }
+
+    .explore-cats {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.3rem;
+      max-height: 5.5rem;
+      overflow-y: auto;
+      padding-bottom: 0.1rem;
+    }
+
+    .explore-cat {
+      appearance: none;
+      border: 1px solid var(--line);
+      background: var(--surface);
+      color: var(--muted);
+      font-family: var(--font-mono);
+      font-size: 0.62rem;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      padding: 0.2rem 0.4rem;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+    }
+
+    /* Inactive pills: division-tinted chrome so categories scan faster */
+    .explore-cat.is-all:not(.is-active) {
+      border-color: rgba(255, 255, 255, 0.16);
+      background: rgba(255, 255, 255, 0.06);
+      color: rgba(245, 246, 250, 0.78);
+    }
+    .explore-cat[data-category="academic"]:not(.is-active) {
+      border-color: rgba(120, 186, 255, 0.5);
+      background: rgba(120, 186, 255, 0.12);
+      color: #cfe6ff;
+    }
+    .explore-cat[data-category="design"]:not(.is-active) {
+      border-color: rgba(255, 122, 198, 0.45);
+      background: rgba(255, 122, 198, 0.1);
+      color: #ffd6ec;
+    }
+    .explore-cat[data-category="engineering"]:not(.is-active) {
+      border-color: rgba(94, 234, 212, 0.45);
+      background: rgba(94, 234, 212, 0.1);
+      color: #c6fff4;
+    }
+    .explore-cat[data-category="finance"]:not(.is-active) {
+      border-color: rgba(252, 211, 77, 0.45);
+      background: rgba(252, 211, 77, 0.11);
+      color: #fff1c2;
+    }
+    .explore-cat[data-category="game-development"]:not(.is-active) {
+      border-color: rgba(192, 132, 252, 0.5);
+      background: rgba(192, 132, 252, 0.12);
+      color: #ecd9ff;
+    }
+    .explore-cat[data-category="marketing"]:not(.is-active) {
+      border-color: rgba(251, 146, 60, 0.48);
+      background: rgba(251, 146, 60, 0.11);
+      color: #ffe2c7;
+    }
+    .explore-cat[data-category="paid-media"]:not(.is-active) {
+      border-color: rgba(248, 113, 113, 0.48);
+      background: rgba(248, 113, 113, 0.1);
+      color: #ffd4d4;
+    }
+    .explore-cat[data-category="product"]:not(.is-active) {
+      border-color: rgba(56, 189, 248, 0.48);
+      background: rgba(56, 189, 248, 0.11);
+      color: #c8efff;
+    }
+    .explore-cat[data-category="project-management"]:not(.is-active) {
+      border-color: rgba(147, 197, 253, 0.45);
+      background: rgba(147, 197, 253, 0.1);
+      color: #e2edff;
+    }
+    .explore-cat[data-category="sales"]:not(.is-active) {
+      border-color: rgba(52, 211, 153, 0.45);
+      background: rgba(52, 211, 153, 0.1);
+      color: #c9ffe8;
+    }
+    .explore-cat[data-category="spatial-computing"]:not(.is-active) {
+      border-color: rgba(34, 211, 238, 0.45);
+      background: rgba(34, 211, 238, 0.1);
+      color: #c5fbff;
+    }
+    .explore-cat[data-category="specialized"]:not(.is-active) {
+      border-color: rgba(244, 114, 182, 0.45);
+      background: rgba(244, 114, 182, 0.1);
+      color: #ffd6ea;
+    }
+    .explore-cat[data-category="strategy"]:not(.is-active) {
+      border-color: rgba(165, 180, 252, 0.5);
+      background: rgba(165, 180, 252, 0.12);
+      color: #e8eaff;
+    }
+    .explore-cat[data-category="support"]:not(.is-active) {
+      border-color: rgba(163, 230, 53, 0.35);
+      background: rgba(163, 230, 53, 0.09);
+      color: #e8ffc8;
+    }
+    .explore-cat[data-category="testing"]:not(.is-active) {
+      border-color: rgba(250, 204, 21, 0.42);
+      background: rgba(250, 204, 21, 0.1);
+      color: #fff6c2;
+    }
+
+    .explore-cat:hover {
+      color: var(--text);
+      border-color: var(--line-2);
+    }
+    .explore-cat.is-all:not(.is-active):hover {
+      border-color: rgba(255, 255, 255, 0.28);
+      background: rgba(255, 255, 255, 0.1);
+    }
+    .explore-cat[data-category]:not(.is-active):hover {
+      filter: brightness(1.12);
+      border-color: var(--line-2);
+    }
+
+    .explore-cat.is-active {
+      color: #0b0b0d;
+      background: var(--accent);
+      border-color: var(--accent-dim);
+    }
+
+    .explore-cat:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 1px;
+    }
+
+    .explore-list-wrap {
+      flex: 1;
+      min-height: 0;
+      overflow: auto;
+      -webkit-overflow-scrolling: touch;
+      margin: 0 -0.35rem;
+      padding: 0 0.35rem;
+    }
+
+    .explore-list { display: flex; flex-direction: column; gap: 0.15rem; }
+
+    .explore-section-head {
+      position: sticky;
+      top: 0;
+      z-index: 2;
+      margin: 0.35rem 0 0.2rem;
+      padding: 0.3rem 0.35rem;
+      font-family: var(--font-mono);
+      font-size: 0.62rem;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+      background: linear-gradient(180deg, var(--bg-1) 70%, transparent);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .explore-section-head:first-child { margin-top: 0; }
+
+    .explore-row {
+      display: flex;
+      gap: 0.45rem;
+      align-items: flex-start;
+      padding: 0.4rem 0.35rem;
+      border-radius: var(--radius-xs);
+      border: 1px solid transparent;
+      transition: border-color 0.15s ease, background 0.15s ease;
+    }
+
+    .explore-row:hover {
+      background: var(--surface);
+      border-color: var(--line);
+    }
+
+    .explore-row-emoji {
+      font-size: 1.1rem;
+      line-height: 1.2;
+      flex-shrink: 0;
+    }
+
+    .explore-row-mid { min-width: 0; flex: 1; }
+
+    .explore-row-title {
+      font-weight: 600;
+      font-size: 0.82rem;
+      color: var(--text);
+      line-height: 1.25;
+    }
+
+    .explore-row-path {
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      color: var(--muted-2);
+      word-break: break-all;
+      margin-top: 0.1rem;
+    }
+
+    .explore-row-vibe {
+      margin: 0.2rem 0 0;
+      font-size: 0.72rem;
+      color: var(--muted);
+      line-height: 1.35;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .explore-row-links {
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 0.15rem;
+      align-items: flex-end;
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+    }
+
+    .explore-row-links a {
+      color: var(--accent-dim);
+      text-decoration: none;
+      white-space: nowrap;
+    }
+
+    .explore-row-links a:hover { color: var(--accent); text-decoration: underline; }
+
+    .explore-row-links button.js-agent-source {
+      appearance: none;
+      background: none;
+      border: none;
+      padding: 0;
+      margin: 0;
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      font-weight: inherit;
+      color: var(--accent-dim);
+      cursor: pointer;
+      text-decoration: none;
+    }
+    .explore-row-links button.js-agent-source:hover {
+      color: var(--accent);
+      text-decoration: underline;
+    }
+
+    .agent-source-backdrop {
+      position: fixed;
+      inset: 0;
+      display: block;
+      width: 100%;
+      height: 100%;
+      z-index: 92;
+      background: rgba(5, 6, 9, 0.55);
+      backdrop-filter: blur(2px);
+      border: none;
+      padding: 0;
+      margin: 0;
+      cursor: pointer;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+    }
+    .agent-source-backdrop.is-on {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    /* Author `display` on these nodes beats the UA `[hidden]` rule — keep dialogs off-screen until opened. */
+    .agent-source-backdrop[hidden],
+    .agent-source-modal[hidden] {
+      display: none !important;
+    }
+
+    .agent-source-modal {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      translate: -50% -50%;
+      z-index: 93;
+      width: min(920px, calc(100% - 1.5rem - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px)));
+      height: min(82dvh, 780px);
+      max-height: min(88dvh, 900px);
+      display: flex;
+      flex-direction: column;
+      background: var(--bg-1);
+      border: 1px solid var(--line-2);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-2);
+      overflow: hidden;
+    }
+    .agent-source-head {
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      padding: 0.55rem 0.75rem;
+      border-bottom: 1px solid var(--line);
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.02), transparent);
+    }
+    .agent-source-head h2 {
+      margin: 0;
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      color: var(--text);
+      word-break: break-all;
+    }
+    .agent-source-toolbar {
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.45rem 0.75rem;
+      border-bottom: 1px solid var(--line);
+    }
+    .agent-source-textarea {
+      flex: 1;
+      min-height: 0;
+      width: 100%;
+      margin: 0;
+      padding: 0.75rem 0.85rem;
+      border: none;
+      resize: none;
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      line-height: 1.45;
+      color: var(--text);
+      background: var(--bg-0);
+      tab-size: 2;
+    }
+    .agent-source-textarea:focus {
+      outline: none;
+      box-shadow: inset 0 0 0 1px var(--accent);
+    }
+
+    .explore-empty {
+      padding: 1rem 0.35rem;
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+
+    .sidebar-toggle {
+      position: fixed;
+      z-index: 70;
+      left: 0;
+      top: clamp(3.25rem, 50%, calc(100% - 3.25rem));
+      translate: 0 -50%;
+      width: 15px;
+      height: 52px;
+      padding: 0;
+      margin: 0;
+      border: 1px solid var(--line-2);
+      border-left: none;
+      border-radius: 0 9px 9px 0;
+      background: linear-gradient(90deg, var(--surface), var(--elev));
+      color: var(--muted);
+      cursor: pointer;
+      box-shadow: var(--shadow-1);
+      transition:
+        left var(--sidebar-dur) var(--sidebar-ease),
+        color 0.18s ease,
+        border-color 0.18s ease,
+        background 0.18s ease;
+    }
+
+    .sidebar-toggle:hover {
+      color: var(--accent);
+      border-color: var(--line-3);
+    }
+
+    .sidebar-toggle:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+
+    .canvas.explore-open .sidebar-toggle {
+      left: calc(var(--sidebar-w) - 1px);
+    }
+
+    .sidebar-toggle-chev {
+      display: block;
+      font-size: 0.85rem;
+      line-height: 1;
+      margin-left: -1px;
+    }
+
+    .explore-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 55;
+      border: none;
+      padding: 0;
+      margin: 0;
+      background: rgba(2, 3, 6, 0.52);
+      cursor: pointer;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity var(--sidebar-dur) var(--sidebar-ease);
+    }
+
+    .explore-backdrop.is-on {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    @media (max-width: 900px) {
+      :root {
+        /* 100% of fixed containing block avoids classic 100vw + scrollbar horizontal overflow */
+        --sidebar-w: min(360px, calc(100% - 12px));
+      }
+
+      .explore-sidebar {
+        position: fixed;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        z-index: 60;
+        width: var(--sidebar-w) !important;
+        max-width: 100%;
+        transform: translateX(-104%);
+        transition:
+          transform var(--sidebar-dur) var(--sidebar-ease),
+          box-shadow var(--sidebar-dur) var(--sidebar-ease);
+        border-right: 1px solid var(--line-2);
+        box-shadow: none;
+      }
+
+      .explore-sidebar.is-open {
+        transform: translateX(0);
+        box-shadow: var(--shadow-2);
+      }
+
+      .explore-sidebar:not(.is-open) {
+        pointer-events: none;
+      }
+
+      .explore-backdrop {
+        display: block;
+      }
+
+      .canvas.explore-open .sidebar-toggle {
+        left: calc(var(--sidebar-w) - 1px);
+      }
+    }
+
+    @media (min-width: 901px) {
+      .explore-backdrop { display: none !important; }
+    }
+
+    /* ────────── skip link ────────── */
+    .skip-link {
+      position: absolute;
+      left: -9999px;
+      top: 0.5rem;
+      z-index: 100;
+      padding: 0.5rem 0.9rem;
+      background: var(--accent);
+      color: #0b0b0d;
+      font-weight: 600;
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      border-radius: 6px;
+      text-decoration: none;
+    }
+    .skip-link:focus { left: 1rem; outline: 2px solid var(--text); outline-offset: 2px; }
+
+    /* ────────── top bar ────────── */
+    .topbar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.65rem 1rem;
+      row-gap: 0.55rem;
+      padding: 0.55rem 0.85rem;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: linear-gradient(180deg, var(--surface), var(--bg-1));
+      font-family: var(--font-mono);
+      font-size: 0.74rem;
+      color: var(--muted);
+      margin-bottom: clamp(1rem, 2.5vw, 1.5rem);
+    }
+
+    /* single window: fixed chrome; column scroll; edge rail */
+    .app-window {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      border: 1px solid var(--line-2);
+      border-radius: calc(var(--radius) + 2px);
+      background: var(--bg-1);
+      box-shadow: var(--shadow-2);
+      overflow: hidden;
+    }
+    .app-window .topbar {
+      flex-shrink: 0;
+      margin-bottom: 0;
+      border-radius: 0;
+      border: none;
+      border-bottom: 1px solid var(--line);
+      background: linear-gradient(180deg, var(--surface), var(--bg-1));
+    }
+    .app-window-body {
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      padding:
+        clamp(0.6rem, 1.4vw, 0.85rem)
+        max(env(safe-area-inset-right, 0px), clamp(0.75rem, 2.2vw, 1.15rem))
+        0
+        max(env(safe-area-inset-left, 0px), clamp(0.75rem, 2.2vw, 1.15rem));
+    }
+
+    .app-rail {
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+      min-height: 1.4rem;
+      margin: 0.35rem 0.75rem 0.45rem;
+      padding: 0.2rem 0.45rem;
+      border: 1px solid var(--line);
+      border-radius: 0 0 10px 10px;
+      border-top: 1px solid var(--line);
+      font-family: var(--font-mono);
+      font-size: 0.6rem;
+      line-height: 1.2;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--muted-2);
+      background: linear-gradient(180deg, var(--bg-1), #07080c);
+    }
+    .app-rail-left, .app-rail-right {
+      min-width: 0;
+    }
+    .app-rail-right { text-align: right; }
+    @media (max-width: 520px) {
+      .app-rail { flex-direction: column; align-items: flex-start; gap: 0.2rem; }
+      .app-rail-right { text-align: left; }
+    }
+    .topbar-left { display: flex; align-items: center; gap: 0.65rem; min-width: 0; }
+    .topbar-brand {
+      color: var(--text);
+      font-weight: 600;
+      letter-spacing: 0.02em;
+    }
+    .topbar-brand .slash { color: var(--muted-2); margin: 0 0.25rem; }
+    .topbar-path { color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .topbar-right {
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+      min-width: 0;
+      flex: 1 1 auto;
+      justify-content: flex-end;
+    }
+    @media (max-width: 420px) {
+      .topbar-right { flex-basis: 100%; justify-content: flex-start; }
+    }
+    .dot {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-wash);
+      flex-shrink: 0;
+    }
+    .dot-muted { background: var(--muted-2); box-shadow: none; }
+    .dot-violet { background: var(--violet); box-shadow: 0 0 0 3px var(--violet-wash); }
+    .dot-warn { background: #f5c24b; box-shadow: 0 0 0 3px rgba(245, 194, 75, 0.18); }
+    .dot-err { background: var(--danger); box-shadow: 0 0 0 3px rgba(255, 106, 106, 0.15); }
+    .chip-btn {
+      appearance: none;
+      border: 1px solid var(--line-2);
+      background: var(--bg-2);
+      color: inherit;
+      font: inherit;
+      padding: 0.25rem 0.55rem;
+      border-radius: 6px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+    }
+    .chip-btn:hover { border-color: var(--line-3); background: var(--surface); }
+    .chip-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    .chip-caret {
+      font-size: 0.8rem;
+      line-height: 1;
+      color: var(--muted-2);
+      transition: transform 0.18s ease;
+    }
+    .chip-btn[aria-expanded="true"] .chip-caret { transform: rotate(180deg); }
+    .topbar-runtime-btn {
+      font-family: var(--font-mono);
+      font-size: 0.74rem;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      color: var(--muted);
+      transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+    }
+    .topbar-runtime-btn:hover { color: var(--text); }
+    .topbar-runtime-btn .topbar-runtime-label {
+      font-weight: 600;
+      color: inherit;
+    }
+    #runtime-launcher[data-state="ready"] { color: var(--text); }
+    #runtime-launcher[data-state="needkey"],
+    #runtime-launcher[data-state="warn"] { color: var(--text); }
+    #runtime-launcher[data-state="pending"] { color: var(--muted); }
+    #runtime-launcher[data-state="off"],
+    #runtime-launcher[data-state="err"] { color: var(--muted-2); }
+    .topbar-live {
+      display: inline-flex; align-items: center; gap: 0.4rem;
+      text-transform: uppercase; letter-spacing: 0.14em;
+    }
+
+    /* ────────── masthead ────────── */
+    .masthead {
+      flex-shrink: 0;
+      margin-bottom: clamp(0.75rem, 2vw, 1.1rem);
+      display: grid;
+      gap: 0.4rem;
+    }
+    .kicker {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      font-weight: 500;
+      letter-spacing: 0.12em;
+      color: var(--muted);
+      text-transform: uppercase;
+      margin: 0;
+      display: inline-flex; align-items: center; gap: 0.45rem;
+    }
+    .kicker::before {
+      content: "//"; color: var(--accent); font-weight: 700;
+    }
+    .masthead h1 {
+      font-family: var(--font-ui);
+      font-size: clamp(1.9rem, 4.6vw, 2.85rem);
+      font-weight: 600;
+      letter-spacing: -0.035em;
+      line-height: 1.02;
+      margin: 0;
+      color: var(--text);
+      text-wrap: balance;
+    }
+    .masthead h1 .cursor {
+      display: inline-block;
+      width: 0.42em;
+      height: 1em;
+      background: var(--accent);
+      margin-left: 0.12em;
+      vertical-align: -0.12em;
+      animation: blink 1.1s steps(1) infinite;
+    }
+    @keyframes blink { 50% { opacity: 0; } }
+    .masthead .lead {
+      color: var(--text-dim);
+      margin: 0.35rem 0 0;
+      max-width: 68ch;
+      font-size: 0.96rem;
+    }
+
+    /* ────────── bento shell (independent column scroll) ────────── */
+    .bento-workspace {
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      align-items: stretch;
+    }
+    @media (min-width: 960px) {
+      .bento-workspace {
+        display: grid;
+        grid-template-columns: minmax(300px, 0.9fr) minmax(380px, 1.4fr);
+        grid-template-rows: 1fr;
+        gap: 0.85rem 0.95rem;
+        align-items: stretch;
+      }
+    }
+    .bento-left-scroll,
+    .bento-right-scroll {
+      min-height: 0;
+      -webkit-overflow-scrolling: touch;
+    }
+    .bento-left-scroll {
+      display: flex;
+      flex-direction: column;
+      gap: 0.85rem;
+      overflow-x: hidden;
+      align-items: stretch;
+      /* Slightly brighter thumb than explore panels so the rail reads on --bg-0 */
+      scrollbar-width: thin;
+      scrollbar-color: rgba(255, 255, 255, 0.32) rgba(255, 255, 255, 0.05);
+    }
+    .bento-left-scroll::-webkit-scrollbar {
+      width: 5px;
+    }
+    .bento-left-scroll::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.32);
+      border-radius: 999px;
+    }
+    .bento-left-scroll::-webkit-scrollbar-thumb:hover {
+      background: rgba(255, 255, 255, 0.48);
+    }
+    .bento-left-scroll::-webkit-scrollbar-track {
+      background: rgba(255, 255, 255, 0.05);
+    }
+    /* Do not shrink panels below their content: overflow:hidden on .panel sets
+       min-height:auto to 0 in flex layout, which was collapsing the goal panel
+       and letting the textarea overlap the filters block below. */
+    .bento-workspace > .bento-left-scroll > section.panel,
+    .bento-workspace > .bento-left-scroll > details.panel {
+      flex-shrink: 0;
+    }
+    @media (min-width: 960px) {
+      .bento-left-scroll { overflow-y: auto; }
+    }
+    .bento-right-scroll {
+      display: flex;
+      flex-direction: column;
+    }
+    .bento-right-scroll .results-column {
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+    }
+    .bento-right-scroll .panel.panel-results {
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .bento-right-scroll .panel.panel-results > h2 {
+      flex-shrink: 0;
+    }
+    .bento-right-scroll .panel.panel-results > .panel-body {
+      flex: 1;
+      min-height: 0;
+      overflow-y: auto;
+      overflow-x: hidden;
+      -webkit-overflow-scrolling: touch;
+    }
+    @media (max-width: 959px) {
+      .bento-left-scroll {
+        max-height: min(44dvh, min(50svh, 22rem));
+        flex: 0 1 auto;
+        overflow-y: auto;
+      }
+      .bento-right-scroll {
+        flex: 1;
+        min-height: 0;
+      }
+    }
+
+    /* ────────── panel ────────── */
+    section.panel, details.panel {
+      position: relative;
+      background: var(--bg-1);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 0;
+      margin-bottom: 0.85rem;
+      overflow: hidden;
+    }
+    .bento-workspace > .bento-left-scroll > .panel,
+    .bento-workspace > .bento-left-scroll > details.panel { margin-bottom: 0; }
+
+    /* panel header: treated as a "module bar" */
+    section.panel > h2,
+    details.panel > summary .disclosure-title-wrap,
+    .panel-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      padding: 0.55rem 0.85rem 0.55rem 0.75rem;
+      border-bottom: 1px solid var(--line);
+      background: linear-gradient(180deg, rgba(255,255,255,0.02), transparent);
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      font-weight: 500;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin: 0;
+    }
+    section.panel > h2::before {
+      content: "■";
+      color: var(--accent);
+      font-size: 0.6rem;
+      margin-right: 0.3rem;
+      line-height: 1;
+    }
+    .panel-results h2::before { color: var(--violet); }
+
+    .panel-body {
+      padding: clamp(0.9rem, 2vw, 1.1rem) clamp(0.9rem, 2.2vw, 1.15rem);
+      min-width: 0;
+    }
+
+    /* ────────── disclosure (filters / advanced) ────────── */
+    details.panel-disclosure > summary {
+      list-style: none;
+      cursor: pointer;
+    }
+    details.panel-disclosure > summary::-webkit-details-marker { display: none; }
+    .disclosure-summary {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.65rem;
+      padding: 0.55rem 0.85rem 0.55rem 0.75rem;
+      border-bottom: 1px solid transparent;
+      transition: border-color 0.15s ease;
+    }
+    details.panel-disclosure[open] > summary .disclosure-summary {
+      border-bottom-color: var(--line);
+    }
+    .disclosure-main {
+      display: flex;
+      align-items: center;
+      gap: 0.55rem;
+      min-width: 0;
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      font-weight: 500;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .disclosure-chevron {
+      display: inline-flex;
+      width: 1rem; height: 1rem;
+      align-items: center; justify-content: center;
+      color: var(--muted-2);
+      transition: transform 0.18s ease, color 0.18s ease;
+    }
+    .disclosure-chevron::before {
+      content: "▸"; font-size: 0.7rem;
+    }
+    details.panel-disclosure[open] .disclosure-chevron {
+      transform: rotate(90deg);
+      color: var(--accent);
+    }
+    .disclosure-title {
+      color: var(--text);
+      font-weight: 600;
+      letter-spacing: 0.14em;
+    }
+    .disclosure-sub {
+      display: none; /* swapped for a tighter mono-only header */
+    }
+    .pill-count {
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      padding: 0.15rem 0.45rem;
+      border-radius: 99px;
+      background: var(--accent-wash);
+      color: var(--accent);
+      border: 1px solid rgba(199, 255, 77, 0.25);
+    }
+    .disclosure-body {
+      padding: clamp(0.9rem, 2vw, 1.1rem) clamp(0.9rem, 2.2vw, 1.15rem);
+      display: flex;
+      flex-direction: column;
+      gap: 1.1rem;
+    }
+
+    /* ────────── labels & fields ────────── */
+    label.hint {
+      display: block;
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      font-weight: 500;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin: 0 0 0.5rem;
+    }
+    .hint-tight { margin-top: 0; margin-bottom: 0.6rem; }
+    .filter-heading {
+      margin: 0 0 0.45rem;
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      font-weight: 500;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .filter-heading::before {
+      content: "⟶ ";
+      color: var(--muted-2);
+    }
+
+    /* ── prompt (goal textarea) ── */
+    .prompt-shell {
+      position: relative;
+      display: block;
+      min-width: 0;
+      border: 1px solid var(--line-2);
+      border-radius: var(--radius-sm);
+      background: var(--bg-2);
+      transition: border-color 0.18s ease, box-shadow 0.18s ease;
+    }
+    .prompt-shell:focus-within {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-wash);
+    }
+    .prompt-shell::before {
+      content: ">";
+      position: absolute;
+      top: 0.78rem;
+      left: 0.85rem;
+      font-family: var(--font-mono);
+      font-weight: 600;
+      color: var(--accent);
+      pointer-events: none;
+      font-size: 0.95rem;
+    }
+    textarea.goal {
+      width: 100%;
+      min-height: min(128px, 42dvh);
+      max-height: min(320px, 55dvh);
+      padding: 0.75rem 0.9rem 0.75rem 2rem;
+      border-radius: var(--radius-sm);
+      border: none;
+      background: transparent;
+      color: var(--text);
+      font-family: var(--font-mono);
+      font-size: 0.9rem;
+      line-height: 1.55;
+      resize: vertical;
+    }
+    textarea.goal::placeholder {
+      color: var(--muted-2);
+      font-family: var(--font-mono);
+    }
+    textarea.goal:focus { outline: none; }
+
+    .hero-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 0.7rem;
+      margin-top: 0.9rem;
+    }
+    @media (min-width: 520px) {
+      .hero-actions { flex-direction: row; flex-wrap: wrap; align-items: center; }
+      .hero-actions .actions { margin-top: 0; flex: 1; min-width: 0; }
+    }
+    .action-hint {
+      margin: 0;
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      font-weight: 400;
+      letter-spacing: 0.02em;
+      color: var(--muted-2);
+      line-height: 1.45;
+      opacity: 0.72;
+    }
+    .action-hint kbd {
+      font-family: var(--font-mono);
+      font-size: 0.62rem;
+      font-weight: 500;
+      padding: 0.06rem 0.32rem;
+      border-radius: 3px;
+      border: 1px solid var(--line);
+      border-bottom-width: 1px;
+      background: rgba(255, 255, 255, 0.03);
+      color: var(--muted);
+    }
+
+    /* ── grid of division checkboxes ── */
+    .grid-divisions {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(min(200px, 100%), 1fr));
+      gap: 0.15rem 0.6rem;
+    }
+    .grid-divisions label.row {
+      display: flex;
+      align-items: center;
+      gap: 0.55rem;
+      font-size: 0.85rem;
+      font-family: var(--font-mono);
+      cursor: pointer;
+      color: var(--text-dim);
+      padding: 0.35rem 0.45rem;
+      margin: 0 -0.45rem;
+      border-radius: var(--radius-xs);
+      transition: background 0.12s ease, color 0.12s ease;
+    }
+    .grid-divisions label.row:hover {
+      background: rgba(255, 255, 255, 0.03);
+      color: var(--text);
+    }
+    .grid-divisions input[type="checkbox"] {
+      appearance: none;
+      -webkit-appearance: none;
+      width: 13px; height: 13px;
+      border: 1px solid var(--line-3);
+      border-radius: 3px;
+      background: var(--bg-2);
+      cursor: pointer;
+      display: inline-grid;
+      place-content: center;
+      flex-shrink: 0;
+      transition: border-color 0.15s ease, background 0.15s ease;
+    }
+    .grid-divisions input[type="checkbox"]::before {
+      content: "";
+      width: 7px; height: 7px;
+      border-radius: 1.5px;
+      background: var(--accent);
+      transform: scale(0);
+      transition: transform 0.12s ease;
+    }
+    .grid-divisions input[type="checkbox"]:checked {
+      border-color: var(--accent);
+      background: var(--accent-wash);
+    }
+    .grid-divisions input[type="checkbox"]:checked::before { transform: scale(1); }
+    .grid-divisions input[type="checkbox"]:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+
+    /* ── tags / pills ── */
+    .tags { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+    .tags label.tag {
+      display: inline-flex; align-items: center; gap: 0.35rem;
+      padding: 0.35rem 0.7rem;
+      border-radius: 6px;
+      border: 1px solid var(--line-2);
+      font-family: var(--font-mono);
+      font-size: 0.76rem;
+      font-weight: 500;
+      cursor: pointer;
+      background: var(--bg-2);
+      color: var(--muted);
+      transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+    }
+    .tags label.tag::before {
+      content: "#";
+      color: var(--muted-2);
+      font-weight: 600;
+    }
+    .tags label.tag:hover { color: var(--text); border-color: var(--line-3); }
+    .tags label.tag:has(input:checked) {
+      color: var(--accent);
+      border-color: rgba(199, 255, 77, 0.45);
+      background: var(--accent-wash);
+    }
+    .tags label.tag:has(input:checked)::before { color: var(--accent); }
+    .tags input { position: absolute; opacity: 0; pointer-events: none; }
+
+    /* ────────── buttons ────────── */
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.55rem;
+      align-items: center;
+      margin-top: 1rem;
+    }
+    .hero-actions .actions { margin-top: 0; }
+
+    button.primary {
+      appearance: none;
+      border: 1px solid var(--accent);
+      background: var(--accent);
+      color: #0a0b0d;
+      font-family: var(--font-mono);
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      padding: 0.6rem 1.1rem;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      font-size: 0.84rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: transform 0.12s ease, filter 0.12s ease, box-shadow 0.12s ease;
+    }
+    button.primary::before { content: "▶"; font-size: 0.65rem; }
+    button.primary:hover { filter: brightness(1.05); box-shadow: 0 0 24px -4px var(--accent-wash); }
+    button.primary:active { transform: translateY(1px); }
+    button.primary:focus-visible { outline: 2px solid var(--text); outline-offset: 3px; }
+    button.primary:disabled { opacity: 0.55; cursor: progress; }
+    button.primary.is-busy:disabled {
+      opacity: 1;
+      cursor: progress;
+      box-shadow:
+        0 0 0 1px rgba(199, 255, 77, 0.35),
+        0 0 26px -8px rgba(199, 255, 77, 0.35);
+      animation: match-btn-glow 0.9s ease-in-out infinite alternate;
+    }
+    @keyframes match-btn-glow {
+      to {
+        box-shadow:
+          0 0 0 1px rgba(199, 255, 77, 0.55),
+          0 0 34px -6px rgba(199, 255, 77, 0.45);
+      }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      button.primary.is-busy:disabled {
+        animation: none;
+      }
+    }
+
+    button.ghost {
+      background: transparent;
+      border: 1px solid var(--line-2);
+      color: var(--muted);
+      padding: 0.55rem 0.9rem;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      font-weight: 500;
+      transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
+    }
+    button.ghost:hover { border-color: var(--line-3); color: var(--text); background: rgba(255,255,255,0.02); }
+    button.ghost:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+    /* ────────── callouts / notices ────────── */
+    .callout {
+      padding: 0.7rem 0.85rem;
+      background: var(--ok-wash);
+      border: 1px solid rgba(77, 214, 148, 0.22);
+      border-left: 2px solid var(--ok);
+      border-radius: var(--radius-xs);
+      margin-bottom: 0.75rem;
+      font-size: 0.85rem;
+      color: #cdeedc;
+      font-family: var(--font-mono);
+    }
+    .callout strong { color: var(--ok); font-weight: 600; }
+    .callout .links a { color: #cdeedc; }
+
+    .gemini-summary {
+      background: var(--violet-wash) !important;
+      border-color: rgba(154, 124, 255, 0.28) !important;
+      border-left-color: var(--violet) !important;
+      color: #e3dcff !important;
+    }
+    .gemini-summary strong { color: var(--violet) !important; }
+
+    /* ────────── results stream ────────── */
+    .results-meta {
+      font-family: var(--font-mono);
+      color: var(--muted);
+      font-size: 0.76rem;
+      margin: 0 0 0.75rem;
+      letter-spacing: 0.02em;
+      min-height: 1.2em;
+    }
+    .results-meta::before { content: "◇ "; color: var(--muted-2); }
+
+    /* Gemini fetch — terminal-ish busy state */
+    .match-loading-root {
+      margin: 0.15rem 0 0.65rem;
+    }
+    .match-loading {
+      position: relative;
+      overflow: hidden;
+      border: 1px solid var(--line-2);
+      border-radius: var(--radius);
+      background:
+        radial-gradient(ellipse 130% 90% at 0% 0%, rgba(199, 255, 77, 0.08), transparent 52%),
+        radial-gradient(ellipse 80% 60% at 100% 100%, rgba(167, 139, 250, 0.06), transparent 45%),
+        var(--bg-0);
+      padding: 0.8rem 0.95rem 0.95rem;
+      font-family: var(--font-mono);
+    }
+    .match-loading::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      opacity: 0.22;
+      background: repeating-linear-gradient(
+        180deg,
+        transparent,
+        transparent 3px,
+        rgba(255, 255, 255, 0.04) 3px,
+        rgba(255, 255, 255, 0.04) 4px
+      );
+    }
+    .match-loading-chrome {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      align-items: center;
+      gap: 0.55rem;
+      font-size: 0.62rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 0.55rem;
+    }
+    .match-loading-dots {
+      display: inline-flex;
+      gap: 5px;
+      align-items: center;
+    }
+    .match-loading-dots i {
+      display: block;
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+    }
+    .match-loading-dots .d1 {
+      background: #ff5f56;
+    }
+    .match-loading-dots .d2 {
+      background: #febc2e;
+    }
+    .match-loading-dots .d3 {
+      background: #28c840;
+    }
+    .match-loading-body {
+      position: relative;
+      z-index: 1;
+      font-size: 0.74rem;
+      line-height: 1.58;
+      color: var(--text-dim);
+    }
+    .match-loading-line {
+      opacity: 0;
+      transform: translateX(-5px);
+      animation: match-line-in 0.38s ease forwards;
+      animation-delay: var(--d, 0ms);
+    }
+    @keyframes match-line-in {
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+    .match-loading .match-prompt {
+      color: var(--accent);
+      margin-right: 0.35rem;
+      font-weight: 600;
+    }
+    .match-loading .dim {
+      color: var(--muted-2);
+    }
+    .match-loading .accent {
+      color: var(--accent);
+      font-weight: 600;
+    }
+    .match-loading-bit .hexstream {
+      display: inline-block;
+      letter-spacing: 0.12em;
+      color: var(--violet);
+      animation: match-hex-pulse 0.75s ease-in-out infinite;
+    }
+    @keyframes match-hex-pulse {
+      50% {
+        opacity: 0.45;
+        filter: hue-rotate(18deg);
+      }
+    }
+    .match-loading-bar {
+      position: relative;
+      z-index: 1;
+      margin-top: 0.75rem;
+      height: 3px;
+      border-radius: 2px;
+      background: var(--line);
+      overflow: hidden;
+    }
+    .match-loading-bar::after {
+      content: "";
+      position: absolute;
+      inset: 0 -50%;
+      background: linear-gradient(90deg, transparent, rgba(199, 255, 77, 0.55), transparent);
+      animation: match-shimmer 1.05s linear infinite;
+    }
+    @keyframes match-shimmer {
+      from {
+        transform: translateX(-15%);
+      }
+      to {
+        transform: translateX(55%);
+      }
+    }
+    .match-loading-footer {
+      position: relative;
+      z-index: 1;
+      margin-top: 0.65rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+      font-size: 0.62rem;
+      letter-spacing: 0.06em;
+      color: var(--muted-2);
+    }
+    .match-loading-tag {
+      font-weight: 600;
+      color: var(--muted);
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      padding: 0.12rem 0.4rem;
+      background: var(--bg-2);
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .match-loading-line {
+        animation: none;
+        opacity: 1;
+        transform: none;
+      }
+      .match-loading-bar::after,
+      .match-loading-bit .hexstream {
+        animation: none;
+      }
+      .match-loading-bar::after {
+        transform: translateX(20%);
+        opacity: 0.5;
+      }
+    }
+
+    .cards {
+      display: flex;
+      flex-direction: column;
+      gap: 0.45rem;
+    }
+
+    article.card {
+      position: relative;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 0.85rem 0.9rem 0.85rem 1rem;
+      background: var(--surface);
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 0.7rem 0.95rem;
+      align-items: start;
+      transition: border-color 0.18s ease, background 0.18s ease, transform 0.18s ease;
+    }
+    article.card::before {
+      content: "";
+      position: absolute;
+      left: 0; top: 10px; bottom: 10px;
+      width: 2px;
+      border-radius: 2px;
+      background: var(--line-2);
+      transition: background 0.2s ease;
+    }
+    article.card:hover {
+      border-color: var(--line-2);
+      background: var(--surface-2);
+    }
+    article.card:hover::before { background: var(--accent); }
+    article.card.card-open {
+      border-color: var(--line-3);
+      background: var(--surface-2);
+    }
+    article.card.card-open::before { background: var(--violet); }
+
+    article.card .card-copy {
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      padding: 0.2rem 0.5rem;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.16s ease;
+    }
+    article.card:hover .card-copy,
+    article.card:focus-within .card-copy,
+    article.card .card-copy:focus-visible {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .card-followups {
+      margin-top: 0.65rem;
+      padding-top: 0.65rem;
+      border-top: 1px solid var(--line);
+    }
+    .card-followups .followups-label {
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      color: var(--muted);
+      margin: 0 0 0.45rem;
+      letter-spacing: 0.02em;
+      text-transform: lowercase;
+    }
+    .card-followups ol.followups-list {
+      margin: 0;
+      padding-left: 1.2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.45rem;
+    }
+    .card-followups li.followup-row {
+      font-size: 0.82rem;
+      color: var(--text-dim);
+      line-height: 1.45;
+    }
+    .card-followups li.followup-row strong {
+      color: var(--text);
+      font-weight: 600;
+    }
+    .followup-row-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+    .followup-row-head strong {
+      flex: 1;
+      min-width: 0;
+    }
+    .card-followups li.followup-row .followup-copy {
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      padding: 0.2rem 0.5rem;
+      flex-shrink: 0;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.16s ease;
+    }
+    .card-followups li.followup-row:hover .followup-copy,
+    .card-followups li.followup-row:focus-within .followup-copy,
+    .card-followups li.followup-row .followup-copy:focus-visible {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .card-followups .followups-meta {
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      color: var(--muted-2);
+      margin-top: 0.15rem;
+    }
+    .card-followups .followups-links {
+      margin-top: 0.25rem;
+    }
+
+    .card-aside {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 0.45rem;
+      min-width: 6.5rem;
+    }
+    @media (max-width: 560px) {
+      article.card { grid-template-columns: 1fr; }
+      .card-aside {
+        align-items: flex-start;
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        width: 100%;
+      }
+    }
+
+    .emoji {
+      font-size: 1.4rem;
+      line-height: 1.3;
+      padding: 0.1rem 0.35rem;
+      border-radius: 6px;
+      background: var(--bg-2);
+      border: 1px solid var(--line);
+    }
+
+    .card-body h3 {
+      margin: 0;
+      font-family: var(--font-ui);
+      font-size: 0.98rem;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      color: var(--text);
+      line-height: 1.25;
+    }
+    .card-body .vibe {
+      color: var(--text-dim);
+      font-size: 0.85rem;
+      margin: 0.3rem 0 0;
+      line-height: 1.5;
+    }
+    .card-body .path {
+      font-size: 0.72rem;
+      color: var(--muted);
+      font-family: var(--font-mono);
+      margin-top: 0.45rem;
+      word-break: break-all;
+    }
+    .card-body .path::before { content: "↳ "; color: var(--muted-2); }
+
+    .score {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      color: var(--accent);
+      background: var(--accent-wash);
+      padding: 0.3rem 0.55rem;
+      border-radius: 5px;
+      white-space: nowrap;
+      border: 1px solid rgba(199, 255, 77, 0.25);
+    }
+
+    .links {
+      display: inline-flex;
+      gap: 0.3rem;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .links a {
+      color: var(--muted);
+      text-decoration: none;
+      font-family: var(--font-mono);
+      font-size: 0.74rem;
+      font-weight: 500;
+      padding: 0.2rem 0.45rem;
+      border: 1px solid var(--line);
+      border-radius: 5px;
+      background: var(--bg-2);
+      transition: color 0.15s ease, border-color 0.15s ease;
+    }
+    .links a:hover {
+      color: var(--accent);
+      border-color: var(--line-2);
+    }
+    .links button.js-agent-source {
+      appearance: none;
+      color: var(--muted);
+      text-decoration: none;
+      font-family: var(--font-mono);
+      font-size: 0.74rem;
+      font-weight: 500;
+      padding: 0.2rem 0.45rem;
+      border: 1px solid var(--line);
+      border-radius: 5px;
+      background: var(--bg-2);
+      cursor: pointer;
+      transition: color 0.15s ease, border-color 0.15s ease;
+    }
+    .links button.js-agent-source:hover {
+      color: var(--accent);
+      border-color: var(--line-2);
+    }
+    .callout .links a {
+      background: transparent;
+      border: none;
+      padding: 0;
+      color: inherit;
+      text-decoration: underline;
+    }
+
+    .empty {
+      color: var(--muted);
+      padding: 0.9rem 0;
+      font-style: italic;
+      font-family: var(--font-mono);
+      font-size: 0.86rem;
+    }
+
+    /* ────────── AI module / toggle ────────── */
+    .ai-ranking-block { padding-top: 0; }
+    .ai-server-status {
+      margin: 0.55rem 0 0;
+      font-family: var(--font-mono);
+      font-size: 0.76rem;
+      color: var(--muted);
+      line-height: 1.55;
+      min-height: 1.15em;
+    }
+    .ai-server-status:not(:empty)::before {
+      content: "$ ";
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    .ai-toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.75rem;
+      cursor: pointer;
+      user-select: none;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: var(--text);
+    }
+    .ai-toggle-input {
+      position: absolute;
+      opacity: 0; width: 1px; height: 1px;
+      pointer-events: none;
+    }
+    .ai-toggle-track {
+      position: relative;
+      width: 2.4rem;
+      height: 1.3rem;
+      border-radius: 99px;
+      background: var(--bg-2);
+      border: 1px solid var(--line-2);
+      flex-shrink: 0;
+      transition: background 0.18s ease, border-color 0.18s ease;
+    }
+    .ai-toggle-track::after {
+      content: "";
+      position: absolute;
+      top: 50%; left: 0.18rem;
+      width: 0.9rem; height: 0.9rem;
+      border-radius: 50%;
+      background: var(--muted);
+      transform: translateY(-50%);
+      transition: transform 0.18s ease, background 0.18s ease;
+    }
+    .ai-toggle-input:checked + .ai-toggle-track {
+      background: var(--accent-wash);
+      border-color: rgba(199, 255, 77, 0.4);
+    }
+    .ai-toggle-input:checked + .ai-toggle-track::after {
+      transform: translate(1.1rem, -50%);
+      background: var(--accent);
+    }
+    .ai-toggle-input:focus-visible + .ai-toggle-track {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+
+    /* ── text inputs ── */
+    .text-in {
+      width: 100%;
+      max-width: 100%;
+      padding: 0.55rem 0.7rem;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--line-2);
+      background: var(--bg-2);
+      color: var(--text);
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+    .text-in:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-wash); }
+    select.text-in { cursor: pointer; }
+    .text-in-wide { max-width: 100%; }
+
+    #gemini-hint-file {
+      margin-top: 0.5rem;
+      color: var(--muted);
+      font-size: 0.78rem;
+      line-height: 1.5;
+    }
+    #gemini-hint-file code,
+    footer code {
+      font-family: var(--font-mono);
+      font-size: 0.85em;
+      color: var(--accent);
+      background: var(--accent-wash);
+      padding: 0.08rem 0.35rem;
+      border-radius: 4px;
+      border: 1px solid rgba(199, 255, 77, 0.2);
+    }
+
+    #temp {
+      width: 100%;
+      max-width: 100%;
+      accent-color: var(--accent);
+      height: 4px;
+    }
+
+    #temp-val {
+      font-family: var(--font-mono);
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    #out-section { margin-top: 0; }
+
+    /* ────────── settings popover (top-right) ────────── */
+    .popover-backdrop {
+      position: fixed; inset: 0;
+      background: rgba(5, 6, 9, 0.55);
+      backdrop-filter: blur(2px);
+      z-index: 90;
+      display: none;
+    }
+    .popover-backdrop.open { display: block; }
+
+    .runtime-popover {
+      position: fixed;
+      top: max(3.25rem, env(safe-area-inset-top, 0px));
+      right: max(clamp(0.85rem, 3vw, 1.5rem), env(safe-area-inset-right, 0px));
+      left: auto;
+      width: min(
+        430px,
+        calc(100% - 2rem - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px))
+      );
+      max-width: calc(100% - 1rem);
+      background: var(--bg-1);
+      border: 1px solid var(--line-2);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-2);
+      z-index: 100;
+      display: none;
+      overflow: hidden;
+    }
+    .runtime-popover.open { display: block; }
+    .runtime-popover .popover-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      padding: 0.55rem 0.75rem;
+      border-bottom: 1px solid var(--line);
+      background: linear-gradient(180deg, rgba(255,255,255,0.02), transparent);
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      font-weight: 500;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .runtime-popover .popover-head-title {
+      display: inline-flex; align-items: center; gap: 0.4rem; color: var(--text);
+    }
+    .runtime-popover .popover-head-title::before {
+      content: "⚙";
+      color: var(--accent);
+      font-size: 0.72rem;
+      line-height: 1;
+    }
+    .settings-section {
+      margin-top: 0.85rem;
+      padding-top: 0.85rem;
+      border-top: 1px solid var(--line);
+    }
+    .settings-section:first-child {
+      margin-top: 0;
+      padding-top: 0;
+      border-top: none;
+    }
+    .settings-section-title {
+      margin: 0 0 0.55rem;
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      font-weight: 600;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .settings-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+    .settings-actions .ghost {
+      width: 100%;
+      text-align: center;
+      justify-content: center;
+    }
+    .settings-shortcuts {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+      font-family: var(--font-mono);
+      font-size: 0.74rem;
+      color: var(--text-dim);
+      line-height: 1.45;
+    }
+    .settings-shortcuts kbd {
+      display: inline-block;
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      padding: 0.08rem 0.32rem;
+      border-radius: 4px;
+      border: 1px solid var(--line-2);
+      background: var(--bg-2);
+      color: var(--muted);
+    }
+    .settings-hint-block {
+      margin: 0.35rem 0 0;
+      font-size: 0.76rem;
+      color: var(--muted);
+      line-height: 1.55;
+    }
+    .popover-close {
+      appearance: none;
+      background: transparent;
+      border: 1px solid var(--line);
+      border-radius: 5px;
+      color: var(--muted);
+      width: 1.55rem; height: 1.55rem;
+      display: inline-grid; place-content: center;
+      cursor: pointer;
+      font-family: var(--font-mono);
+      font-size: 0.9rem;
+      line-height: 1;
+      transition: color 0.15s ease, border-color 0.15s ease;
+    }
+    .popover-close:hover { color: var(--text); border-color: var(--line-2); }
+    .popover-close:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    .runtime-popover .disclosure-body {
+      padding: 0.95rem 0.95rem;
+      max-height: min(78dvh, 640px);
+      overflow-y: auto;
+    }
+
+    /* ────────── filters shortlist (centered dialog) ────────── */
+    .filters-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(5, 6, 9, 0.52);
+      backdrop-filter: blur(2px);
+      z-index: 87;
+      display: none;
+    }
+    .filters-backdrop.open {
+      display: block;
+    }
+    .filters-popover {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      translate: -50% -50%;
+      z-index: 88;
+      width: min(440px, calc(100% - 2rem - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px)));
+      max-height: min(82dvh, 720px);
+      background: var(--bg-1);
+      border: 1px solid var(--line-2);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-2);
+      display: none;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .filters-popover.open {
+      display: flex;
+    }
+    .filters-popover .popover-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      padding: 0.55rem 0.75rem;
+      border-bottom: 1px solid var(--line);
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.02), transparent);
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      font-weight: 500;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--muted);
+      flex-shrink: 0;
+    }
+    .filters-popover .popover-head-title {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      color: var(--text);
+    }
+    .filters-popover .popover-head-title::before {
+      content: "◇";
+      color: var(--accent);
+      font-size: 0.65rem;
+    }
+    .filters-popover-body {
+      flex: 1;
+      min-height: 0;
+      overflow-x: hidden;
+      overflow-y: auto;
+      padding: clamp(0.9rem, 2vw, 1.1rem) clamp(0.9rem, 2.2vw, 1.15rem);
+      display: flex;
+      flex-direction: column;
+      gap: 1.1rem;
+    }
+    .filters-popover-footer {
+      flex-shrink: 0;
+      padding: 0.6rem 0.75rem 0.75rem;
+      border-top: 1px solid var(--line);
+      display: flex;
+      justify-content: flex-end;
+      gap: 0.5rem;
+    }
+    button.filters-open-btn {
+      display: block;
+      width: 100%;
+      margin: 0;
+      padding: 0;
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      font: inherit;
+      text-align: left;
+      color: inherit;
+    }
+    button.filters-open-btn:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: -2px;
+    }
+    button.filters-open-btn:hover .disclosure-summary,
+    button.filters-open-btn:focus-visible .disclosure-summary {
+      border-bottom-color: var(--line);
+    }
+    button.filters-open-btn .disclosure-summary {
+      border-bottom: 1px solid transparent;
+      transition: border-color 0.15s ease;
+    }
+    #filters-open[aria-expanded="true"] .disclosure-chevron {
+      transform: rotate(90deg);
+      color: var(--accent);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      *, *::before, *::after {
+        transition: none !important;
+        animation: none !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="canvas">
+    <div class="app-layout">
+      <aside
+        id="explore-sidebar"
+        class="explore-sidebar"
+        aria-label="Explore agent catalog"
+        aria-hidden="true"
+      >
+        <div class="explore-inner">
+          <header class="explore-head">
+            <h2 class="explore-title">Explore</h2>
+            <p class="explore-sub">
+              Token index over embedded catalog fields — filter by name, path, category, description, and vibe.
+            </p>
+          </header>
+          <div class="explore-controls">
+            <label class="explore-search-label">
+              <span class="sr-only">Filter agents in catalog</span>
+              <input
+                type="search"
+                id="explore-search"
+                class="explore-search text-in"
+                placeholder="Filter…"
+                autocomplete="off"
+                spellcheck="false"
+              />
+            </label>
+            <div id="explore-cats" class="explore-cats" role="tablist" aria-label="Category index"></div>
+          </div>
+          <div class="explore-list-wrap" id="explore-list-wrap">
+            <div id="explore-list" class="explore-list"></div>
+          </div>
+          <div
+            class="explore-resize"
+            id="explore-resize"
+            role="separator"
+            aria-orientation="vertical"
+            aria-label="Resize explore panel"
+            tabindex="0"
+            title="Drag to resize · double-click to reset"
+          ></div>
+        </div>
+      </aside>
+      <button
+        type="button"
+        id="sidebar-toggle"
+        class="sidebar-toggle"
+        aria-controls="explore-sidebar"
+        aria-expanded="false"
+        aria-label="Open explore sidebar"
+        title="Explore catalog"
+      >
+        <span class="sidebar-toggle-chev" aria-hidden="true">›</span>
+      </button>
+      <div id="explore-backdrop" class="explore-backdrop" hidden aria-hidden="true"></div>
+    <div class="wrap">
+      <a class="skip-link" href="#main-content">Skip to main content</a>
+
+      <div class="app-window">
+      <div class="topbar" role="complementary" aria-label="Console status">
+        <div class="topbar-left">
+          <span class="topbar-brand">agency<span class="slash">/</span>matchmaker</span>
+          <span class="topbar-path">~/agents · catalog.json</span>
+        </div>
+        <div class="topbar-right">
+          <button
+            type="button"
+            class="topbar-runtime-btn chip-btn"
+            id="runtime-launcher"
+            data-state="pending"
+            aria-expanded="false"
+            aria-controls="app-settings"
+            aria-haspopup="dialog"
+            title="Settings · ranker, workspace, shortcuts"
+          >
+            <span class="topbar-runtime-dot dot dot-muted" aria-hidden="true"></span>
+            <span class="topbar-runtime-label">online</span>
+          </button>
+        </div>
+      </div>
+
+      <main id="main-content" class="app-window-body">
+        <header class="masthead">
+          <p class="kicker">the agency / matchmaker</p>
+          <h1>Define your outcome.<span class="cursor" aria-hidden="true"></span></h1>
+          <p class="lead">
+            Say what you want shipped. Gemini scans this repo's agents, picks who fits, says why. No Gemini? Simple local matcher still runs.
+          </p>
+        </header>
+
+        <div class="bento-workspace">
+          <div class="bento-left-scroll">
+            <section class="panel bento-tile-goal" aria-labelledby="lbl-goal">
+              <h2 id="lbl-goal">prompt · gemini</h2>
+              <div class="panel-body">
+                <label class="hint" for="goal">describe the outcome — the more context, the better the ranking</label>
+                <div class="prompt-shell">
+                  <textarea id="goal" class="goal" placeholder="e.g. launch a WeChat mini-program shop with analytics, or harden our K8s cluster before Black Friday"></textarea>
+                </div>
+                <div class="hero-actions">
+                  <div class="actions actions-hero">
+                    <button type="button" class="primary" id="btn-match">ask gemini</button>
+                    <button type="button" class="ghost" id="btn-clear">clear</button>
+                  </div>
+                  <p class="action-hint">
+                    <kbd>⌘</kbd>/<kbd>Ctrl</kbd> + <kbd>Enter</kbd> executes from the input
+                  </p>
+                </div>
+              </div>
+            </section>
+
+            <section class="panel bento-tile-filters" id="filter-launch-section" aria-label="Shortlist filters">
+              <button
+                type="button"
+                class="filters-open-btn"
+                id="filters-open"
+                aria-expanded="false"
+                aria-controls="filters-popover"
+                aria-haspopup="dialog"
+              >
+                <span class="disclosure-summary">
+                  <span class="disclosure-main">
+                    <span class="disclosure-chevron" aria-hidden="true"></span>
+                    <span class="disclosure-title">filters · shortlist</span>
+                  </span>
+                  <span id="filter-badge" class="pill-count" hidden>0</span>
+                </span>
+              </button>
+            </section>
+          </div>
+
+          <div class="bento-right-scroll">
+            <div class="results-column bento-tile-results">
+              <section class="panel panel-results" id="out-section" aria-labelledby="lbl-matches">
+                <h2 id="lbl-matches">matches · stream</h2>
+                <div class="panel-body">
+                  <div id="orchestrator-callout" class="callout" hidden></div>
+                  <div id="gemini-summary" class="callout gemini-summary" hidden></div>
+                  <p class="results-meta" id="results-meta" aria-live="polite"></p>
+                  <div class="cards" id="results" aria-live="polite"></div>
+                </div>
+              </section>
+            </div>
+          </div>
+        </div>
+
+        <div class="filters-backdrop" id="filters-backdrop" aria-hidden="true"></div>
+        <div
+          class="filters-popover"
+          id="filters-popover"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="filters-popover-title"
+          aria-hidden="true"
+        >
+          <div class="popover-head">
+            <span class="popover-head-title" id="filters-popover-title">filters · shortlist</span>
+            <button type="button" class="popover-close" id="filters-close" aria-label="Close filters">×</button>
+          </div>
+          <div class="filters-popover-body">
+            <div aria-labelledby="lbl-div">
+              <h3 class="filter-heading" id="lbl-div">divisions</h3>
+              <p class="hint hint-tight">pick any — leave blank to rank on description alone</p>
+              <div class="grid-divisions" id="division-boxes"></div>
+            </div>
+            <div aria-labelledby="lbl-tags">
+              <h3 class="filter-heading" id="lbl-tags">focus tags</h3>
+              <p class="hint hint-tight">boost offline ranking when your goal matches these themes (gemini still uses divisions only for pool)</p>
+              <div class="tags" id="focus-tags"></div>
+            </div>
+          </div>
+          <div class="filters-popover-footer">
+            <button type="button" class="primary" id="filters-done">done</button>
+          </div>
+        </div>
+
+        <div class="popover-backdrop" id="runtime-backdrop"></div>
+        <div class="runtime-popover" id="app-settings" role="dialog" aria-modal="true" aria-labelledby="settings-popover-title">
+          <div class="popover-head">
+            <span class="popover-head-title" id="settings-popover-title">settings · app</span>
+            <button type="button" class="popover-close" id="runtime-close" aria-label="Close settings">×</button>
+          </div>
+          <div class="disclosure-body" id="settings-body">
+            <div class="settings-section">
+              <h3 class="settings-section-title">ranker · connection</h3>
+              <div class="ai-ranking-block">
+                <label class="ai-toggle">
+                  <input type="checkbox" id="use-ai-ranking" class="ai-toggle-input" checked />
+                  <span class="ai-toggle-track" aria-hidden="true"></span>
+                  <span class="ai-toggle-text">use gemini ranker</span>
+                </label>
+                <p class="ai-server-status" id="ai-server-status" role="status"></p>
+                <p class="action-hint" id="gemini-hint-file" hidden>
+                  serve via <code>python3 agent-matchmaker/webapp.py</code> (http://) to enable — file:// links cannot reach the ranker
+                </p>
+              </div>
+            </div>
+            <div class="settings-section">
+              <h3 class="settings-section-title">credentials · session</h3>
+              <label class="hint" for="api-key">api key · override (optional)</label>
+              <input type="password" id="api-key" class="text-in text-in-wide" autocomplete="off" spellcheck="false" />
+              <label class="ai-toggle" style="margin-top: 0.4rem">
+                <input type="checkbox" id="remember-api-key" class="ai-toggle-input" />
+                <span class="ai-toggle-track" aria-hidden="true"></span>
+                <span class="ai-toggle-text">remember in this browser</span>
+              </label>
+              <p class="action-hint" style="margin-top: 0.3rem">off by default — key is sent only for this session</p>
+            </div>
+            <div class="settings-section">
+              <h3 class="settings-section-title">model · prompt envelope</h3>
+              <label class="hint" for="extra-ctx">extra context (sent with each match)</label>
+              <input type="text" id="extra-ctx" class="text-in text-in-wide" placeholder="stack, region, timeline…" />
+              <label class="hint" for="model-select" style="margin-top: 0.55rem">model</label>
+              <select id="model-select" class="text-in text-in-wide">
+                <option value="gemini-2.5-flash">gemini-2.5-flash</option>
+                <option value="gemini-2.5-pro">gemini-2.5-pro</option>
+                <option value="gemini-1.5-flash">gemini-1.5-flash</option>
+                <option value="gemini-1.5-pro">gemini-1.5-pro</option>
+              </select>
+              <label class="hint" for="temp" style="margin-top: 0.55rem">temperature · <span id="temp-val">0.25</span></label>
+              <input type="range" id="temp" min="0" max="1" step="0.05" value="0.25" />
+            </div>
+            <div class="settings-section">
+              <h3 class="settings-section-title">workspace · actions</h3>
+              <p class="action-hint">Jump to tools elsewhere in the layout (this panel stays dismissible with × or backdrop).</p>
+              <div class="settings-actions">
+                <button type="button" class="ghost" id="settings-open-explore">open catalog explorer</button>
+                <button type="button" class="ghost" id="settings-reset-explore-width">reset explorer panel width</button>
+                <button type="button" class="ghost" id="settings-open-filters">open shortlist filters</button>
+                <button type="button" class="ghost" id="settings-clear-workspace">clear prompt &amp; results</button>
+              </div>
+            </div>
+            <div class="settings-section">
+              <h3 class="settings-section-title">keyboard</h3>
+              <ul class="settings-shortcuts" aria-label="Keyboard shortcuts">
+                <li><kbd>⌘</kbd> / <kbd>Ctrl</kbd> + <kbd>Enter</kbd> — run match from the goal field</li>
+                <li><kbd>Esc</kbd> — close topmost dialog (source viewer, filters, then settings)</li>
+                <li><kbd>Tab</kbd> — cycle focus inside an open dialog</li>
+              </ul>
+            </div>
+            <div class="settings-section">
+              <h3 class="settings-section-title">catalog · offline</h3>
+              <p class="settings-hint-block">
+                After editing agent markdown, rebuild <code>catalog.json</code> and the embedded offline index:
+                <code>python3 scripts/build_agent_matchmaker.py</code>
+              </p>
+              <p class="settings-hint-block">
+                Opening <code>index.html</code> as <code>file://</code> keeps the heuristic matcher; the Gemini ranker needs this page served over HTTP from repo root.
+              </p>
+              <p class="settings-hint-block">
+                Result cards: <strong>github</strong> opens the file on GitHub; <strong>local</strong> opens the markdown source panel for copy.
+              </p>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <footer class="app-rail" role="contentinfo" aria-label="Catalog and build">
+        <span class="app-rail-left" id="app-rail-catalog"></span>
+        <span class="app-rail-right" id="app-rail-hint"></span>
+      </footer>
+      </div>
+    </div>
+    </div>
+  </div>
+
+  <button
+    type="button"
+    id="agent-source-backdrop"
+    class="agent-source-backdrop"
+    hidden
+    aria-label="Close agent source"
+  ></button>
+  <div
+    id="agent-source-modal"
+    class="agent-source-modal"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="agent-source-title"
+    hidden
+  >
+    <div class="agent-source-head">
+      <h2 id="agent-source-title"></h2>
+      <button type="button" class="popover-close" id="agent-source-close" aria-label="Close">×</button>
+    </div>
+    <div class="agent-source-toolbar">
+      <button type="button" class="ghost" id="agent-source-copy">copy all</button>
+    </div>
+    <textarea id="agent-source-body" class="agent-source-textarea" readonly spellcheck="false" rows="1"></textarea>
+  </div>
+
+  <script>
+    window.__agentCatalogB64 = "__AGENT_CATALOG_B64__";
+  </script>
+  <script>
+(async function () {
+  const isFile = window.location.protocol === "file:";
+
+  async function loadCatalog() {
+    if (!isFile && /^https?:$/i.test(window.location.protocol)) {
+      try {
+        const r = await fetch(new URL("catalog.json", window.location.href).href, { cache: "default" });
+        if (r.ok) {
+          const data = await r.json();
+          if (Array.isArray(data) && data.length) return data;
+        }
+      } catch (_) {
+        /* use embedded catalog */
+      }
+    }
+    const b64 = window.__agentCatalogB64;
+    if (typeof b64 !== "string" || !b64.length) return [];
+    try {
+      const data = JSON.parse(atob(b64));
+      return Array.isArray(data) ? data : [];
+    } catch {
+      return [];
+    }
+  }
+
+  const CATALOG = await loadCatalog();
+  (function initAppRail() {
+    const elCat = document.getElementById("app-rail-catalog");
+    const elHint = document.getElementById("app-rail-hint");
+    const n = Array.isArray(CATALOG) ? CATALOG.length : 0;
+    if (elCat) {
+      elCat.textContent = n
+        ? `catalog · ${n} agents · embedded offline index`
+        : "catalog · (empty) — scripts/build_agent_matchmaker.py";
+    }
+    if (elHint) {
+      elHint.textContent = isFile
+        ? "file:// — http webapp for gemini + live catalog"
+        : "served: catalog.json · regen after agent edits";
+    }
+  })();
+
+  const DIVISION_LABELS = {
+    academic: "academic & research",
+    design: "design & creative",
+    engineering: "engineering & software",
+    finance: "finance & accounting",
+    "game-development": "game development",
+    marketing: "marketing & growth",
+    "paid-media": "paid media & ads",
+    product: "product management",
+    "project-management": "project management",
+    sales: "sales & revenue",
+    "spatial-computing": "spatial / ar / vr / xr",
+    specialized: "specialized / vertical",
+    strategy: "strategy & planning",
+    support: "support & operations",
+    testing: "testing & qa",
+  };
+  const FOCUS_TAGS = [
+    { id: "china", label: "china / apac growth", keys: ["china", "wechat", "weibo", "douyin", "xiaohongshu", "baidu", "kuaishou", "zhihu", "bilibili", "cross-border", "apac", "mandarin"] },
+    { id: "legal", label: "legal / compliance", keys: ["legal", "compliance", "regulator", "gdpr", "contract", "privacy"] },
+    { id: "games", label: "games / engines", keys: ["game", "unity", "unreal", "godot", "roblox", "level design", "narrative", "multiplayer"] },
+    { id: "data", label: "data / ml / ai", keys: ["data", "ml", "machine learning", "model", "pipeline", "analytics", "embedding", "llm", "rag"] },
+    { id: "commerce", label: "e-commerce / retail", keys: ["ecommerce", "shopify", "amazon", "retail", "sku", "checkout"] },
+    { id: "enterprise", label: "enterprise / scale", keys: ["enterprise", "sre", "kubernetes", "security", "audit", "soc"] },
+    { id: "content", label: "content / social / seo", keys: ["seo", "content", "social", "twitter", "linkedin", "reddit", "tiktok"] },
+    { id: "infra", label: "infra / devops", keys: ["devops", "ci", "cd", "kubernetes", "terraform", "deploy", "observability"] },
+    { id: "mobile", label: "mobile / apps", keys: ["ios", "android", "swift", "kotlin", "flutter", "react native", "app store", "play store"] },
+    { id: "payments", label: "payments / fintech", keys: ["stripe", "paypal", "fintech", "billing", "subscription", "ledger", "pci"] },
+    { id: "hardware", label: "hardware / iot", keys: ["hardware", "iot", "embedded", "firmware", "pcb", "sensor"] },
+    { id: "ux", label: "ux / research", keys: ["ux", "ui", "research", "usability", "prototype", "figma", "accessibility", "a11y"] },
+  ];
+  const STOP = new Set([
+    "the", "and", "for", "are", "but", "not", "you", "all", "can", "her", "was", "one", "our", "out", "day", "get", "has", "him", "his", "how", "its", "may", "new", "now", "old", "see", "two", "who", "boy", "did", "let", "put", "say", "she", "too", "use", "that", "this", "with", "from", "have", "been", "what", "when", "your", "into", "than", "then", "them", "will", "just", "also", "some", "need", "want", "help", "make", "build", "using", "about", "would", "could", "should",
+  ]);
+
+  const divisionBox = document.getElementById("division-boxes");
+  const focusBox = document.getElementById("focus-tags");
+  const goalEl = document.getElementById("goal");
+  const resultsEl = document.getElementById("results");
+  const metaEl = document.getElementById("results-meta");
+  const orchEl = document.getElementById("orchestrator-callout");
+  const geminiSummaryEl = document.getElementById("gemini-summary");
+  const useAiRankingEl = document.getElementById("use-ai-ranking");
+  const aiAdvancedDetails = document.getElementById("app-settings");
+  const outSection = document.getElementById("out-section");
+  const filterBadge = document.getElementById("filter-badge");
+  const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const btnMatchEl = document.getElementById("btn-match");
+  const apiKeyEl = document.getElementById("api-key");
+  const rememberKeyEl = document.getElementById("remember-api-key");
+  const LS_GEMINI = "agency-agents:matchmaker:gemini-api-key";
+  const LS_GEMINI_REMEMBER = "agency-agents:matchmaker:gemini-remember";
+
+  function persistGeminiKeyFromInput() {
+    if (isFile || !apiKeyEl) return;
+    try {
+      if (!rememberKeyEl || !rememberKeyEl.checked) {
+        localStorage.removeItem(LS_GEMINI);
+        return;
+      }
+      const v = apiKeyEl.value.trim();
+      if (v) localStorage.setItem(LS_GEMINI, v);
+      else localStorage.removeItem(LS_GEMINI);
+    } catch (_) {
+      /* private mode / blocked storage */
+    }
+  }
+
+  if (!isFile && apiKeyEl) {
+    try {
+      const remembered = localStorage.getItem(LS_GEMINI_REMEMBER) === "1";
+      if (rememberKeyEl) rememberKeyEl.checked = remembered;
+      if (remembered) {
+        const saved = (localStorage.getItem(LS_GEMINI) || "").trim();
+        if (saved) apiKeyEl.value = saved;
+      } else {
+        localStorage.removeItem(LS_GEMINI);
+      }
+    } catch (_) {
+      /* ignore */
+    }
+    apiKeyEl.addEventListener("blur", persistGeminiKeyFromInput);
+    if (rememberKeyEl) {
+      rememberKeyEl.addEventListener("change", () => {
+        try {
+          if (rememberKeyEl.checked) {
+            localStorage.setItem(LS_GEMINI_REMEMBER, "1");
+            persistGeminiKeyFromInput();
+          } else {
+            localStorage.removeItem(LS_GEMINI_REMEMBER);
+            localStorage.removeItem(LS_GEMINI);
+          }
+        } catch (_) {
+          /* ignore */
+        }
+      });
+    }
+  }
+
+  const aiServerStatus = document.getElementById("ai-server-status");
+  let serverGeminiKeyCached = false;
+  let geminiInstalledCached = false;
+  let geminiHealthResolved = false;
+
+  const runtimeBackdrop = document.getElementById("runtime-backdrop");
+  const runtimeClose = document.getElementById("runtime-close");
+  const runtimeLauncher = document.getElementById("runtime-launcher");
+  const FOCUSABLE_SEL = 'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
+  function runtimeIsOpen() {
+    return !!(aiAdvancedDetails && aiAdvancedDetails.classList.contains("open"));
+  }
+  function openRuntime() {
+    if (!aiAdvancedDetails || runtimeIsOpen()) return;
+    aiAdvancedDetails.classList.add("open");
+    if (runtimeBackdrop) runtimeBackdrop.classList.add("open");
+    if (runtimeLauncher) runtimeLauncher.setAttribute("aria-expanded", "true");
+    const first = aiAdvancedDetails.querySelector(FOCUSABLE_SEL);
+    if (first) first.focus();
+  }
+  function closeRuntime() {
+    if (!aiAdvancedDetails || !runtimeIsOpen()) return;
+    const hadFocusInside = aiAdvancedDetails.contains(document.activeElement);
+    aiAdvancedDetails.classList.remove("open");
+    if (runtimeBackdrop) runtimeBackdrop.classList.remove("open");
+    if (runtimeLauncher) {
+      runtimeLauncher.setAttribute("aria-expanded", "false");
+      if (hadFocusInside) runtimeLauncher.focus();
+    }
+  }
+  function toggleRuntime() {
+    if (runtimeIsOpen()) closeRuntime(); else openRuntime();
+  }
+  if (runtimeLauncher) runtimeLauncher.addEventListener("click", toggleRuntime);
+  if (runtimeBackdrop) runtimeBackdrop.addEventListener("click", closeRuntime);
+  if (runtimeClose) runtimeClose.addEventListener("click", closeRuntime);
+
+  const filtersBackdrop = document.getElementById("filters-backdrop");
+  const filtersPopover = document.getElementById("filters-popover");
+  const filtersOpenBtn = document.getElementById("filters-open");
+  const filtersCloseBtn = document.getElementById("filters-close");
+  const filtersDoneBtn = document.getElementById("filters-done");
+
+  function filtersIsOpen() {
+    return !!(filtersPopover && filtersPopover.classList.contains("open"));
+  }
+  function openFiltersPopover() {
+    if (!filtersPopover || filtersIsOpen()) return;
+    filtersPopover.classList.add("open");
+    if (filtersBackdrop) filtersBackdrop.classList.add("open");
+    if (filtersOpenBtn) filtersOpenBtn.setAttribute("aria-expanded", "true");
+    filtersPopover.setAttribute("aria-hidden", "false");
+    if (filtersBackdrop) filtersBackdrop.setAttribute("aria-hidden", "false");
+    const first = filtersPopover.querySelector(FOCUSABLE_SEL);
+    if (first) first.focus();
+  }
+  function closeFiltersPopover() {
+    if (!filtersPopover || !filtersIsOpen()) return;
+    const hadFocusInside = filtersPopover.contains(document.activeElement);
+    filtersPopover.classList.remove("open");
+    if (filtersBackdrop) filtersBackdrop.classList.remove("open");
+    if (filtersOpenBtn) {
+      filtersOpenBtn.setAttribute("aria-expanded", "false");
+      if (hadFocusInside) filtersOpenBtn.focus();
+    }
+    filtersPopover.setAttribute("aria-hidden", "true");
+    if (filtersBackdrop) filtersBackdrop.setAttribute("aria-hidden", "true");
+  }
+  if (filtersOpenBtn) filtersOpenBtn.addEventListener("click", openFiltersPopover);
+  if (filtersCloseBtn) filtersCloseBtn.addEventListener("click", closeFiltersPopover);
+  if (filtersDoneBtn) filtersDoneBtn.addEventListener("click", closeFiltersPopover);
+  if (filtersBackdrop) filtersBackdrop.addEventListener("click", closeFiltersPopover);
+  document.addEventListener("keydown", (e) => {
+    if (!filtersIsOpen()) return;
+    if (e.key !== "Tab") return;
+    const nodes = filtersPopover.querySelectorAll(FOCUSABLE_SEL);
+    if (!nodes.length) return;
+    const first = nodes[0];
+    const last = nodes[nodes.length - 1];
+    if (e.shiftKey && document.activeElement === first) {
+      e.preventDefault();
+      last.focus();
+    } else if (!e.shiftKey && document.activeElement === last) {
+      e.preventDefault();
+      first.focus();
+    } else if (!filtersPopover.contains(document.activeElement)) {
+      e.preventDefault();
+      first.focus();
+    }
+  });
+
+  document.addEventListener("keydown", (e) => {
+    if (!runtimeIsOpen()) return;
+    if (e.key === "Escape") { e.preventDefault(); closeRuntime(); return; }
+    if (e.key !== "Tab") return;
+    const nodes = aiAdvancedDetails.querySelectorAll(FOCUSABLE_SEL);
+    if (!nodes.length) return;
+    const first = nodes[0];
+    const last = nodes[nodes.length - 1];
+    if (e.shiftKey && document.activeElement === first) {
+      e.preventDefault();
+      last.focus();
+    } else if (!e.shiftKey && document.activeElement === last) {
+      e.preventDefault();
+      first.focus();
+    } else if (!aiAdvancedDetails.contains(document.activeElement)) {
+      e.preventDefault();
+      first.focus();
+    }
+  });
+  function setRuntimeLauncherState(state) {
+    if (!runtimeLauncher) return;
+    runtimeLauncher.dataset.state = state;
+    const dotEl = runtimeLauncher.querySelector(".topbar-runtime-dot");
+    const labelEl = runtimeLauncher.querySelector(".topbar-runtime-label");
+    let dotClass = "topbar-runtime-dot dot dot-muted";
+    let label = "online";
+    let aria = "Online — open settings";
+    if (state === "err") {
+      dotClass = "topbar-runtime-dot dot dot-err";
+      label = "offline";
+      aria = "Offline — open settings";
+    } else if (state === "off") {
+      dotClass = "topbar-runtime-dot dot dot-muted";
+      label = "offline";
+      aria = "Offline — open settings";
+    } else if (state === "pending") {
+      dotClass = "topbar-runtime-dot dot dot-muted";
+      label = "online";
+      aria = "Connecting — open settings";
+    } else if (state === "warn") {
+      dotClass = "topbar-runtime-dot dot dot-warn";
+      label = "online";
+      aria = "Online (warning) — open settings";
+    } else if (state === "needkey") {
+      dotClass = "topbar-runtime-dot dot dot-warn";
+      label = "online";
+      aria = "Online — add API key in settings";
+    } else if (state === "ready") {
+      dotClass = "topbar-runtime-dot dot";
+      label = "online";
+      aria = "Online — open settings";
+    }
+    if (dotEl) dotEl.className = dotClass;
+    if (labelEl) labelEl.textContent = label;
+    runtimeLauncher.setAttribute("aria-label", aria);
+  }
+
+  if (runtimeLauncher) setRuntimeLauncherState(isFile ? "off" : "pending");
+
+  function clientApiKeyFilled() {
+    const el = document.getElementById("api-key");
+    return !!(el && el.value.trim());
+  }
+
+  /** Keep chip + status aligned with /api/health and the runtime API-key field */
+  function syncGeminiIndicator() {
+    if (!aiServerStatus || !useAiRankingEl) return;
+    if (isFile) return;
+    if (!geminiHealthResolved) return;
+
+    if (!geminiInstalledCached && serverGeminiKeyCached) {
+      aiServerStatus.textContent =
+        "Python SDK missing — pip install -r agent-matchmaker/requirements-app.txt. Key is already on the server (.env); install SDK then restart.";
+      useAiRankingEl.disabled = true;
+      useAiRankingEl.checked = false;
+      setRuntimeLauncherState("warn");
+      return;
+    }
+
+    if (!geminiInstalledCached) {
+      aiServerStatus.textContent =
+        "install Gemini Python SDK — from repo root: pip install -r agent-matchmaker/requirements-app.txt, restart webapp.";
+      useAiRankingEl.disabled = true;
+      useAiRankingEl.checked = false;
+      setRuntimeLauncherState("warn");
+      return;
+    }
+
+    useAiRankingEl.disabled = false;
+
+    if (serverGeminiKeyCached) {
+      aiServerStatus.textContent =
+        "Gemini SDK loaded — API key from server (.env / env). Toggle on to rank with the model.";
+      setRuntimeLauncherState("ready");
+      return;
+    }
+
+    if (clientApiKeyFilled()) {
+      aiServerStatus.textContent =
+        "Gemini SDK loaded — using pasted API key for this session (sent with each match).";
+      setRuntimeLauncherState("ready");
+      return;
+    }
+
+    aiServerStatus.textContent =
+      "Gemini SDK loaded — no server key yet. Add GEMINI_API_KEY to repo .env or paste a key below.";
+    setRuntimeLauncherState("needkey");
+  }
+
+  if (isFile) {
+    if (useAiRankingEl) { useAiRankingEl.checked = false; useAiRankingEl.disabled = true; }
+    const fh = document.getElementById("gemini-hint-file");
+    if (fh) fh.hidden = false;
+  }
+
+  if (!isFile && aiServerStatus && useAiRankingEl) {
+    fetch(new URL("/api/health", window.location.href).href, { cache: "no-store" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((h) => {
+        geminiHealthResolved = true;
+        if (!h || !h.ok) {
+          if (aiServerStatus) {
+            aiServerStatus.textContent =
+              "cannot reach /api/health — open this page via webapp.py (http://), not file://";
+          }
+          setRuntimeLauncherState("err");
+          updateMatchButton();
+          return;
+        }
+        geminiInstalledCached = !!h.gemini_installed;
+        serverGeminiKeyCached = !!h.server_gemini_key;
+        if (h.gemini_installed && h.server_gemini_key) {
+          useAiRankingEl.checked = true;
+        } else if (!h.gemini_installed) {
+          useAiRankingEl.checked = false;
+        } else {
+          useAiRankingEl.checked = false;
+        }
+        syncGeminiIndicator();
+        updateMatchButton();
+      })
+      .catch(() => {
+        geminiHealthResolved = true;
+        if (aiServerStatus) {
+          aiServerStatus.textContent =
+            "server unreachable — run python3 agent-matchmaker/webapp.py from the repo and open the printed URL";
+        }
+        setRuntimeLauncherState("err");
+        updateMatchButton();
+      });
+  }
+
+  function updateFilterBadge() {
+    if (!filterBadge) return;
+    const n =
+      divisionBox.querySelectorAll("input:checked").length + focusBox.querySelectorAll("input:checked").length;
+    if (n === 0) {
+      filterBadge.hidden = true;
+    } else {
+      filterBadge.hidden = false;
+      filterBadge.textContent = String(n);
+    }
+  }
+
+  function scrollMatchesIntoViewIfNeeded() {
+    if (!outSection) return;
+    if (!window.matchMedia("(max-width: 959px)").matches) return;
+    requestAnimationFrame(() => {
+      outSection.scrollIntoView({
+        behavior: prefersReducedMotion ? "auto" : "smooth",
+        block: "start",
+      });
+    });
+  }
+
+  if (useAiRankingEl) {
+    useAiRankingEl.addEventListener("change", () => {
+      if (useAiRankingEl.checked && !isFile && !serverGeminiKeyCached && !clientApiKeyFilled()) {
+        openRuntime();
+      } else if (!useAiRankingEl.checked) {
+        closeRuntime();
+      }
+      syncGeminiIndicator();
+      updateMatchButton();
+    });
+  }
+
+  const apiKeyInputEl = document.getElementById("api-key");
+  if (apiKeyInputEl) {
+    apiKeyInputEl.addEventListener("input", () => {
+      syncGeminiIndicator();
+      updateMatchButton();
+    });
+  }
+  const tempEl = document.getElementById("temp");
+  const tempValEl = document.getElementById("temp-val");
+  tempEl.addEventListener("input", () => {
+    const v = parseFloat(tempEl.value);
+    tempValEl.textContent = Number.isFinite(v) ? String(v) : "0.25";
+  });
+
+  const categories = [...new Set(CATALOG.map((a) => a.category))].sort();
+  categories.forEach((cat) => {
+    const id = "div-" + cat;
+    const lab = document.createElement("label");
+    lab.className = "row";
+    lab.setAttribute("for", id);
+    const cb = document.createElement("input");
+    cb.type = "checkbox";
+    cb.id = id;
+    cb.dataset.category = cat;
+    const span = document.createElement("span");
+    span.textContent = DIVISION_LABELS[cat] || cat;
+    lab.appendChild(cb);
+    lab.appendChild(span);
+    divisionBox.appendChild(lab);
+  });
+
+  divisionBox.addEventListener("change", updateFilterBadge);
+
+  FOCUS_TAGS.forEach((t) => {
+    const id = "tag-" + t.id;
+    const lab = document.createElement("label");
+    lab.className = "tag";
+    const cb = document.createElement("input");
+    cb.type = "checkbox";
+    cb.id = id;
+    cb.dataset.tag = t.id;
+    lab.appendChild(cb);
+    lab.appendChild(document.createTextNode(" " + t.label));
+    focusBox.appendChild(lab);
+  });
+
+  focusBox.addEventListener("change", updateFilterBadge);
+  updateFilterBadge();
+
+  goalEl.addEventListener("keydown", (e) => {
+    if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
+      e.preventDefault();
+      if (btnMatchEl && !btnMatchEl.disabled) btnMatchEl.click();
+    }
+  });
+
+  function tokenize(text) {
+    return text
+      .toLowerCase()
+      .replace(/[^a-z0-9\u4e00-\u9fff]+/g, " ")
+      .split(/\s+/)
+      .filter((w) => w.length > 2 && !STOP.has(w));
+  }
+
+  function haystack(agent) {
+    return [agent.name, agent.description, agent.vibe || "", agent.path.replace(/[-_/]/g, " ")]
+      .join(" \n ")
+      .toLowerCase();
+  }
+
+  const exploreSidebarEl = document.getElementById("explore-sidebar");
+  const exploreToggleEl = document.getElementById("sidebar-toggle");
+  const exploreBackdropEl = document.getElementById("explore-backdrop");
+  const exploreSearchEl = document.getElementById("explore-search");
+  const exploreCatsEl = document.getElementById("explore-cats");
+  const exploreListEl = document.getElementById("explore-list");
+  const exploreResizeEl = document.getElementById("explore-resize");
+  const exploreInnerEl = document.querySelector(".explore-inner");
+  const canvasRootEl = document.querySelector(".canvas");
+  const LS_EXPLORE_OPEN = "agency-agents:matchmaker:explore-open";
+  const LS_EXPLORE_WIDTH = "agency-agents:matchmaker:explore-width-px";
+
+  function exploreSidebarWidthMin() {
+    return 220;
+  }
+  function exploreSidebarWidthMax() {
+    return Math.min(560, Math.max(exploreSidebarWidthMin() + 1, window.innerWidth - 24));
+  }
+  function clampExploreSidebarWidthPx(w) {
+    const lo = exploreSidebarWidthMin();
+    const hi = exploreSidebarWidthMax();
+    return Math.round(Math.min(hi, Math.max(lo, w)));
+  }
+  function applyExploreSidebarWidthPx(w) {
+    if (!canvasRootEl) return;
+    const c = clampExploreSidebarWidthPx(w);
+    canvasRootEl.style.setProperty("--sidebar-w", `${c}px`);
+    try {
+      localStorage.setItem(LS_EXPLORE_WIDTH, String(c));
+    } catch (_) {
+      /* ignore */
+    }
+  }
+  function loadStoredExploreSidebarWidth() {
+    if (!canvasRootEl) return;
+    try {
+      const raw = localStorage.getItem(LS_EXPLORE_WIDTH);
+      if (!raw) return;
+      const n = parseInt(raw, 10);
+      if (!Number.isFinite(n)) return;
+      applyExploreSidebarWidthPx(n);
+    } catch (_) {
+      /* ignore */
+    }
+  }
+  function resetExploreSidebarWidth() {
+    if (!canvasRootEl) return;
+    canvasRootEl.style.removeProperty("--sidebar-w");
+    try {
+      localStorage.removeItem(LS_EXPLORE_WIDTH);
+    } catch (_) {
+      /* ignore */
+    }
+  }
+  function syncExploreSidebarWidthToViewport() {
+    const raw = canvasRootEl?.style.getPropertyValue("--sidebar-w").trim() || "";
+    if (!raw.endsWith("px")) return;
+    const n = parseInt(raw, 10);
+    if (!Number.isFinite(n)) return;
+    const c = clampExploreSidebarWidthPx(n);
+    if (c !== n) applyExploreSidebarWidthPx(c);
+  }
+  function readExploreSidebarWidthPx() {
+    const raw = canvasRootEl?.style.getPropertyValue("--sidebar-w").trim() || "";
+    if (raw.endsWith("px")) {
+      const n = parseInt(raw, 10);
+      if (Number.isFinite(n)) return clampExploreSidebarWidthPx(n);
+    }
+    if (exploreSidebarEl?.classList.contains("is-open") && exploreInnerEl) {
+      const rect = exploreInnerEl.getBoundingClientRect();
+      if (rect.width > 4) return clampExploreSidebarWidthPx(Math.round(rect.width));
+    }
+    try {
+      const stored = localStorage.getItem(LS_EXPLORE_WIDTH);
+      if (stored) {
+        const n = parseInt(stored, 10);
+        if (Number.isFinite(n)) return clampExploreSidebarWidthPx(n);
+      }
+    } catch (_) {
+      /* ignore */
+    }
+    return clampExploreSidebarWidthPx(Math.min(360, window.innerWidth * 0.42));
+  }
+  function initExploreSidebarResize() {
+    if (!exploreResizeEl || !exploreSidebarEl || !canvasRootEl) return;
+    let dragging = false;
+    let startX = 0;
+    let startW = 300;
+
+    exploreResizeEl.addEventListener("pointerdown", (e) => {
+      if (e.button !== 0) return;
+      e.preventDefault();
+      dragging = true;
+      exploreSidebarEl.classList.add("is-resizing");
+      startX = e.clientX;
+      if (!exploreSidebarEl.classList.contains("is-open")) setExploreOpen(true);
+      startW = readExploreSidebarWidthPx();
+      exploreResizeEl.setPointerCapture(e.pointerId);
+    });
+    exploreResizeEl.addEventListener("pointermove", (e) => {
+      if (!dragging) return;
+      const delta = e.clientX - startX;
+      applyExploreSidebarWidthPx(startW + delta);
+    });
+    function endDrag(e) {
+      if (!dragging) return;
+      dragging = false;
+      exploreSidebarEl.classList.remove("is-resizing");
+      try {
+        exploreResizeEl.releasePointerCapture(e.pointerId);
+      } catch (_) {
+        /* ignore */
+      }
+    }
+    exploreResizeEl.addEventListener("pointerup", endDrag);
+    exploreResizeEl.addEventListener("pointercancel", endDrag);
+    exploreResizeEl.addEventListener("dblclick", (e) => {
+      e.preventDefault();
+      resetExploreSidebarWidth();
+    });
+    exploreResizeEl.addEventListener("keydown", (e) => {
+      const step = e.shiftKey ? 24 : 12;
+      const w = readExploreSidebarWidthPx();
+      if (e.key === "ArrowRight") {
+        e.preventDefault();
+        applyExploreSidebarWidthPx(w + step);
+      } else if (e.key === "ArrowLeft") {
+        e.preventDefault();
+        applyExploreSidebarWidthPx(w - step);
+      } else if (e.key === "Home") {
+        e.preventDefault();
+        applyExploreSidebarWidthPx(exploreSidebarWidthMin());
+      } else if (e.key === "End") {
+        e.preventDefault();
+        applyExploreSidebarWidthPx(exploreSidebarWidthMax());
+      }
+    });
+  }
+
+  /** Searchable rows: normalized blob + token bag for fast filtering */
+  const exploreRows = CATALOG.map((agent) => {
+    const blob = [agent.name, agent.path, agent.category, agent.description || "", agent.vibe || ""]
+      .join(" ")
+      .toLowerCase();
+    const bag = new Set(tokenize(blob));
+    for (const raw of blob.split(/\s+/)) {
+      const t = raw.replace(/[^a-z0-9\u4e00-\u9fff]+/gi, "").toLowerCase();
+      if (t.length > 2 && !STOP.has(t)) bag.add(t);
+    }
+    return { agent, blob, bag };
+  });
+
+  let exploreCatFilter = "";
+
+  function exploreMediaNarrow() {
+    return window.matchMedia("(max-width: 900px)").matches;
+  }
+
+  function exploreScoreRow(query, row) {
+    const q = query.trim().toLowerCase();
+    if (!q) return 1;
+    let s = 0;
+    if (row.blob.includes(q)) s += 24;
+    const qTokens = tokenize(q);
+    for (const tok of qTokens) {
+      if (row.blob.includes(tok)) s += 6;
+      if (row.bag.has(tok)) s += 3;
+    }
+    const loose = q.split(/\s+/).filter((x) => x.length > 1);
+    for (const piece of loose) {
+      const p = piece.toLowerCase();
+      if (p.length > 1 && row.blob.includes(p)) s += 4;
+    }
+    return s;
+  }
+
+  function openAgentSourceModal(path, text) {
+    const backdrop = document.getElementById("agent-source-backdrop");
+    const modal = document.getElementById("agent-source-modal");
+    const title = document.getElementById("agent-source-title");
+    const body = document.getElementById("agent-source-body");
+    if (!backdrop || !modal || !title || !body) return;
+    title.textContent = path;
+    body.value = text || "";
+    backdrop.hidden = false;
+    modal.hidden = false;
+    modal.setAttribute("aria-hidden", "false");
+    requestAnimationFrame(() => backdrop.classList.add("is-on"));
+    body.focus();
+    body.select();
+  }
+
+  function closeAgentSourceModal() {
+    const backdrop = document.getElementById("agent-source-backdrop");
+    const modal = document.getElementById("agent-source-modal");
+    if (!backdrop || !modal) return;
+    backdrop.classList.remove("is-on");
+    modal.hidden = true;
+    backdrop.hidden = true;
+    modal.setAttribute("aria-hidden", "true");
+  }
+
+  function openAgentSourceForPath(path) {
+    const a = CATALOG.find((x) => x.path === path);
+    const embedded = a && typeof a.source === "string" ? a.source : "";
+    if (embedded.length) {
+      openAgentSourceModal(path, embedded);
+      return;
+    }
+    if (isFile) {
+      openAgentSourceModal(
+        path,
+        "Markdown source is not embedded in this page. Run: python3 scripts/build_agent_matchmaker.py — then reload. Or open this app via webapp.py and use the server copy."
+      );
+      return;
+    }
+    const url = new URL("/api/agent-source", window.location.href);
+    url.searchParams.set("path", path);
+    openAgentSourceModal(path, "Loading…");
+    const body = document.getElementById("agent-source-body");
+    fetch(url.href, { cache: "no-store" })
+      .then((r) => (r.ok ? r.text() : Promise.reject(new Error(String(r.status)))))
+      .then((t) => {
+        if (body) {
+          body.value = t;
+          body.select();
+        }
+      })
+      .catch(() => {
+        if (body) {
+          body.value =
+            "Could not load this file. Rebuild the catalog (embeds full markdown) or run webapp.py from the repo root.";
+        }
+      });
+  }
+
+  function initAgentSourceUi() {
+    const backdrop = document.getElementById("agent-source-backdrop");
+    const modal = document.getElementById("agent-source-modal");
+    const copyBtn = document.getElementById("agent-source-copy");
+    const closeBtn = document.getElementById("agent-source-close");
+    const body = document.getElementById("agent-source-body");
+    if (!backdrop || !modal || !copyBtn || !closeBtn || !body) return;
+    closeBtn.addEventListener("click", closeAgentSourceModal);
+    backdrop.addEventListener("click", closeAgentSourceModal);
+    copyBtn.addEventListener("click", async () => {
+      try {
+        await navigator.clipboard.writeText(body.value);
+        const prev = copyBtn.textContent;
+        copyBtn.textContent = "copied";
+        setTimeout(() => {
+          copyBtn.textContent = prev;
+        }, 1600);
+      } catch (_) {
+        body.select();
+        try {
+          document.execCommand("copy");
+        } catch (__) {
+          /* ignore */
+        }
+      }
+    });
+    document.querySelector(".canvas")?.addEventListener("click", (e) => {
+      const btn = e.target.closest("button.js-agent-source");
+      if (!btn || !btn.dataset.path) return;
+      e.preventDefault();
+      e.stopPropagation();
+      openAgentSourceForPath(btn.dataset.path);
+    });
+    document.addEventListener("keydown", (e) => {
+      if (e.key !== "Escape") return;
+      const md = document.getElementById("agent-source-modal");
+      if (md && !md.hidden) {
+        closeAgentSourceModal();
+        e.preventDefault();
+        return;
+      }
+      if (filtersIsOpen()) {
+        closeFiltersPopover();
+        e.preventDefault();
+        return;
+      }
+      if (runtimeIsOpen()) return;
+      if (exploreSidebarEl?.classList.contains("is-open")) {
+        setExploreOpen(false);
+        e.preventDefault();
+      }
+    });
+  }
+
+  function makeExploreRow(agent) {
+    const art = document.createElement("article");
+    art.className = "explore-row";
+    const em = document.createElement("span");
+    em.className = "explore-row-emoji";
+    em.textContent = agent.emoji || "📄";
+    em.setAttribute("aria-hidden", "true");
+    const mid = document.createElement("div");
+    mid.className = "explore-row-mid";
+    const title = document.createElement("div");
+    title.className = "explore-row-title";
+    title.textContent = agent.name;
+    const pathLine = document.createElement("div");
+    pathLine.className = "explore-row-path";
+    pathLine.textContent = agent.path;
+    const vibe = document.createElement("p");
+    vibe.className = "explore-row-vibe";
+    const vtext = (agent.vibe || agent.description || "").trim();
+    vibe.textContent = vtext.length > 180 ? vtext.slice(0, 179) + "…" : vtext || "—";
+    mid.appendChild(title);
+    mid.appendChild(pathLine);
+    mid.appendChild(vibe);
+    const links = document.createElement("div");
+    links.className = "explore-row-links";
+    const gh = document.createElement("a");
+    gh.href = ghLink(agent.path);
+    gh.target = "_blank";
+    gh.rel = "noopener noreferrer";
+    gh.textContent = "github";
+    const loc = document.createElement("button");
+    loc.type = "button";
+    loc.className = "js-agent-source";
+    loc.dataset.path = agent.path;
+    loc.textContent = "local";
+    loc.title = "View full markdown (copy)";
+    links.appendChild(gh);
+    links.appendChild(loc);
+    art.appendChild(em);
+    art.appendChild(mid);
+    art.appendChild(links);
+    return art;
+  }
+
+  function renderExploreList() {
+    if (!exploreListEl) return;
+    const q = (exploreSearchEl && exploreSearchEl.value) || "";
+    const hasQuery = q.trim().length > 0;
+    let rows = exploreRows.slice();
+    if (exploreCatFilter) rows = rows.filter((r) => r.agent.category === exploreCatFilter);
+    if (hasQuery) {
+      rows = rows
+        .map((row) => ({ row, s: exploreScoreRow(q, row) }))
+        .filter((x) => x.s > 0)
+        .sort((a, b) => b.s - a.s || a.row.agent.name.localeCompare(b.row.agent.name))
+        .map((x) => x.row);
+    } else {
+      rows.sort((a, b) => {
+        const c = a.agent.category.localeCompare(b.agent.category);
+        return c !== 0 ? c : a.agent.name.localeCompare(b.agent.name);
+      });
+    }
+    const frag = document.createDocumentFragment();
+    if (!rows.length) {
+      const empty = document.createElement("p");
+      empty.className = "explore-empty";
+      empty.textContent = hasQuery ? "No agents match that filter." : "No catalog entries.";
+      frag.appendChild(empty);
+    } else if (!hasQuery) {
+      let lastCat = "";
+      for (const row of rows) {
+        if (row.agent.category !== lastCat) {
+          lastCat = row.agent.category;
+          const head = document.createElement("div");
+          head.className = "explore-section-head";
+          head.textContent = DIVISION_LABELS[row.agent.category] || row.agent.category;
+          frag.appendChild(head);
+        }
+        frag.appendChild(makeExploreRow(row.agent));
+      }
+    } else {
+      for (const row of rows) frag.appendChild(makeExploreRow(row.agent));
+    }
+    exploreListEl.replaceChildren(frag);
+  }
+
+  function syncExploreCatButtons() {
+    if (!exploreCatsEl) return;
+    exploreCatsEl.querySelectorAll(".explore-cat").forEach((btn) => {
+      const cat = btn.dataset.category || "";
+      const isAll = btn.classList.contains("is-all");
+      const active = isAll ? !exploreCatFilter : exploreCatFilter === cat;
+      btn.classList.toggle("is-active", active);
+      btn.setAttribute("aria-selected", active ? "true" : "false");
+    });
+  }
+
+  function setExploreOpen(open) {
+    if (!exploreSidebarEl || !exploreToggleEl || !canvasRootEl) return;
+    exploreSidebarEl.classList.toggle("is-open", open);
+    canvasRootEl.classList.toggle("explore-open", open);
+    exploreToggleEl.setAttribute("aria-expanded", open ? "true" : "false");
+    exploreToggleEl.setAttribute("aria-label", open ? "Close explore sidebar" : "Open explore sidebar");
+    const chev = exploreToggleEl.querySelector(".sidebar-toggle-chev");
+    if (chev) chev.textContent = open ? "‹" : "›";
+    exploreSidebarEl.setAttribute("aria-hidden", open ? "false" : "true");
+    if (exploreBackdropEl) {
+      if (open && exploreMediaNarrow()) {
+        exploreBackdropEl.hidden = false;
+        exploreBackdropEl.setAttribute("aria-hidden", "false");
+        requestAnimationFrame(() => exploreBackdropEl.classList.add("is-on"));
+      } else {
+        exploreBackdropEl.classList.remove("is-on");
+        exploreBackdropEl.setAttribute("aria-hidden", "true");
+        exploreBackdropEl.hidden = true;
+      }
+    }
+    try {
+      if (open) localStorage.setItem(LS_EXPLORE_OPEN, "1");
+      else localStorage.removeItem(LS_EXPLORE_OPEN);
+    } catch (_) {
+      /* ignore */
+    }
+  }
+
+  function toggleExploreOpen() {
+    const next = !exploreSidebarEl.classList.contains("is-open");
+    setExploreOpen(next);
+    if (next && exploreSearchEl) {
+      requestAnimationFrame(() => exploreSearchEl.focus());
+    }
+  }
+
+  function initExploreSidebar() {
+    if (!exploreSidebarEl || !exploreToggleEl || !exploreCatsEl || !exploreSearchEl) return;
+
+    loadStoredExploreSidebarWidth();
+    initExploreSidebarResize();
+
+    let startOpen = false;
+    try {
+      startOpen = localStorage.getItem(LS_EXPLORE_OPEN) === "1";
+    } catch (_) {
+      /* ignore */
+    }
+    setExploreOpen(startOpen);
+
+    const mkCat = (label, cat, isAll) => {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "explore-cat" + (isAll ? " is-all" : "");
+      btn.textContent = label;
+      btn.dataset.category = cat;
+      btn.setAttribute("role", "tab");
+      btn.setAttribute("aria-selected", cat === exploreCatFilter ? "true" : "false");
+      btn.addEventListener("click", () => {
+        if (isAll) exploreCatFilter = "";
+        else exploreCatFilter = exploreCatFilter === cat ? "" : cat;
+        syncExploreCatButtons();
+        renderExploreList();
+      });
+      return btn;
+    };
+    exploreCatsEl.appendChild(mkCat("all", "", true));
+    categories.forEach((cat) => {
+      exploreCatsEl.appendChild(mkCat(DIVISION_LABELS[cat] || cat, cat, false));
+    });
+    syncExploreCatButtons();
+
+    exploreSearchEl.addEventListener("input", () => renderExploreList());
+    exploreToggleEl.addEventListener("click", () => toggleExploreOpen());
+    if (exploreBackdropEl) {
+      exploreBackdropEl.addEventListener("click", () => setExploreOpen(false));
+    }
+    window.addEventListener("resize", () => {
+      syncExploreSidebarWidthToViewport();
+      if (!exploreSidebarEl.classList.contains("is-open")) return;
+      setExploreOpen(true);
+    });
+
+    renderExploreList();
+  }
+
+  function rankAllAgents() {
+    const goal = goalEl.value.trim();
+    const goalTokens = tokenize(goal);
+    const selectedCats = Array.from(divisionBox.querySelectorAll("input:checked")).map((el) => el.dataset.category);
+    const selectedTags = Array.from(focusBox.querySelectorAll("input:checked")).map((el) => el.dataset.tag);
+    const tagKeys = FOCUS_TAGS.filter((t) => selectedTags.includes(t.id)).flatMap((t) => t.keys);
+
+    const multiDivision =
+      selectedCats.length >= 3 || /\borchestrat|workflow|pipeline|multiple agents|handoff|full stack project\b/i.test(goal);
+
+    const ranked = CATALOG.map((agent) => {
+      let score = 0;
+      const hs = haystack(agent);
+
+      if (selectedCats.length) {
+        if (selectedCats.includes(agent.category)) score += 18;
+      }
+
+      for (const tok of goalTokens) {
+        if (hs.includes(tok)) score += 4;
+      }
+
+      for (const k of tagKeys) {
+        if (hs.includes(k.toLowerCase())) score += 7;
+      }
+
+      if (agent.path.includes("game-development")) {
+        if (selectedTags.includes("games")) score += 10;
+      }
+      if (/china|wechat|douyin|apac/i.test(goal) && selectedTags.includes("china")) score += 5;
+
+      return { agent, score };
+    });
+
+    ranked.sort((a, b) => b.score - a.score);
+    return { ranked, multiDivision };
+  }
+
+  function scoreAgents() {
+    const { ranked, multiDivision } = rankAllAgents();
+    const top = ranked.filter((r) => r.score > 0).slice(0, 12);
+    const fallback = ranked.slice(0, 8).map((r) => ({ ...r, score: r.score || 0 }));
+    return { list: top.length ? top : fallback, multiDivision };
+  }
+
+  function followUpAgents(primaryPath) {
+    const { ranked } = rankAllAgents();
+    const out = [];
+    const seen = new Set([primaryPath]);
+    for (const r of ranked) {
+      if (seen.has(r.agent.path)) continue;
+      seen.add(r.agent.path);
+      out.push(r);
+      if (out.length >= 3) break;
+    }
+    return out;
+  }
+
+  function ghLinkWithBase(path, base) {
+    const root = (base || "https://github.com/msitarzewski/agency-agents/blob/main/").replace(/\/?$/, "/");
+    return root + path.split("/").map(encodeURIComponent).join("/");
+  }
+
+  function formatSingleMatchText(ctx) {
+    const lines = [];
+    lines.push("Agency agent — single match");
+    lines.push("=".repeat(36));
+    lines.push("");
+    lines.push("Goal:");
+    lines.push(ctx.goal || "(empty)");
+    if (ctx.extra) {
+      lines.push("");
+      lines.push("Extra context:");
+      lines.push(ctx.extra);
+    }
+    lines.push("");
+    lines.push("Mode: " + (ctx.mode === "gemini" ? "Gemini ranker" : "Offline heuristic"));
+    if (ctx.summary) {
+      lines.push("");
+      lines.push("Batch summary:");
+      lines.push(ctx.summary);
+    }
+    if (ctx.orchestration) {
+      lines.push("");
+      lines.push("Orchestration note:");
+      lines.push(ctx.orchestration);
+    }
+    lines.push("");
+    lines.push(`Pick #${ctx.rank}: ${ctx.name}`);
+    lines.push(ctx.path);
+    if (ctx.fit_score != null && ctx.fit_score !== "") lines.push(`Fit: ${ctx.fit_score}/100`);
+    if (ctx.heuristic_score != null && ctx.heuristic_score !== "") lines.push(`Heuristic score: ${ctx.heuristic_score}`);
+    if (ctx.why) lines.push(`Why: ${ctx.why}`);
+    if (ctx.caveat) lines.push(`Caveat: ${ctx.caveat}`);
+    lines.push(`GitHub: ${ctx.github}`);
+    lines.push("");
+    return lines.join("\n");
+  }
+
+  function wireMatchCopyBtn(btn, ctx) {
+    btn.type = "button";
+    btn.className = "ghost card-copy";
+    btn.setAttribute("aria-label", "Copy this match as plain text");
+    btn.textContent = "copy";
+    btn.addEventListener("click", async (ev) => {
+      ev.stopPropagation();
+      ev.preventDefault();
+      const text = formatSingleMatchText(ctx);
+      const label = btn.textContent;
+      try {
+        await navigator.clipboard.writeText(text);
+        btn.textContent = "copied";
+        setTimeout(() => {
+          btn.textContent = label;
+        }, 1200);
+      } catch {
+        btn.textContent = "blocked";
+        setTimeout(() => {
+          btn.textContent = label;
+        }, 1800);
+      }
+    });
+  }
+
+  function formatFollowUpMatchText(ctx) {
+    const lines = [];
+    lines.push("Agency agent — suggested follow-on");
+    lines.push("=".repeat(38));
+    lines.push("");
+    lines.push("Goal:");
+    lines.push(ctx.goal || "(empty)");
+    if (ctx.extra) {
+      lines.push("");
+      lines.push("Extra context:");
+      lines.push(ctx.extra);
+    }
+    lines.push("");
+    lines.push("Primary pick (expanded):");
+    lines.push(ctx.primaryPath);
+    lines.push("");
+    lines.push(`Suggested next agent — step ${ctx.step} of ${ctx.stepTotal} (run in list order)`);
+    lines.push(`${ctx.emoji ? ctx.emoji + " " : ""}${ctx.name}`);
+    lines.push(ctx.path);
+    lines.push(`Ranking score: ${ctx.score}`);
+    if (ctx.blurb) lines.push(`Summary: ${ctx.blurb}`);
+    lines.push(`GitHub: ${ctx.github}`);
+    lines.push("");
+    return lines.join("\n");
+  }
+
+  function wireFollowUpCopyBtn(btn, ctx) {
+    btn.type = "button";
+    btn.className = "ghost followup-copy";
+    btn.setAttribute("aria-label", "Copy this suggested agent as plain text");
+    btn.textContent = "copy";
+    btn.addEventListener("click", async (ev) => {
+      ev.stopPropagation();
+      ev.preventDefault();
+      const text = formatFollowUpMatchText(ctx);
+      const label = btn.textContent;
+      try {
+        await navigator.clipboard.writeText(text);
+        btn.textContent = "copied";
+        setTimeout(() => {
+          btn.textContent = label;
+        }, 1200);
+      } catch {
+        btn.textContent = "blocked";
+        setTimeout(() => {
+          btn.textContent = label;
+        }, 1800);
+      }
+    });
+  }
+
+  function ensureFollowUpsPanel(card) {
+    let panel = card.querySelector(".card-followups");
+    if (panel) return panel;
+    const primaryPath = card.dataset.path;
+    if (!primaryPath) return null;
+    const ghBase = card.dataset.ghBase || "";
+    const goal = goalEl.value.trim();
+    const extra = (document.getElementById("extra-ctx").value || "").trim();
+    const rows = followUpAgents(primaryPath);
+    const stepTotal = rows.length;
+    panel = document.createElement("div");
+    panel.className = "card-followups";
+    panel.hidden = true;
+    const label = document.createElement("p");
+    label.className = "followups-label";
+    label.textContent =
+      "Suggested next agents for your prompt (same ranking signal as offline match — run in list order)";
+    panel.appendChild(label);
+    if (!rows.length) {
+      const empty = document.createElement("p");
+      empty.className = "vibe";
+      empty.style.margin = "0";
+      empty.textContent = "No additional catalog entries ranked for this prompt.";
+      panel.appendChild(empty);
+      const body = card.querySelector(".card-body");
+      if (body) body.appendChild(panel);
+      return panel;
+    }
+    const ol = document.createElement("ol");
+    ol.className = "followups-list";
+    rows.forEach(({ agent, score }, idx) => {
+      const li = document.createElement("li");
+      li.className = "followup-row";
+      const head = document.createElement("div");
+      head.className = "followup-row-head";
+      const step = document.createElement("strong");
+      step.textContent = `${idx + 1}. ${agent.emoji ? agent.emoji + " " : ""}${agent.name}`;
+      head.appendChild(step);
+      const rawBlurb = (agent.vibe || agent.description || "").trim();
+      const blurbExport = rawBlurb.length > 320 ? rawBlurb.slice(0, 319) + "…" : rawBlurb;
+      const copyBtn = document.createElement("button");
+      wireFollowUpCopyBtn(copyBtn, {
+        goal,
+        extra,
+        primaryPath,
+        step: idx + 1,
+        stepTotal,
+        name: agent.name,
+        path: agent.path,
+        emoji: agent.emoji || "",
+        score: Math.round(score),
+        blurb: blurbExport,
+        github: ghLinkWithBase(agent.path, ghBase),
+      });
+      head.appendChild(copyBtn);
+      li.appendChild(head);
+      const meta = document.createElement("div");
+      meta.className = "followups-meta";
+      meta.textContent = `${agent.path} · match score ${Math.round(score)}`;
+      li.appendChild(meta);
+      const blurb = document.createElement("div");
+      blurb.className = "vibe";
+      blurb.style.marginTop = "0.2rem";
+      blurb.textContent = rawBlurb.length > 220 ? rawBlurb.slice(0, 219) + "…" : rawBlurb;
+      li.appendChild(blurb);
+      const lk = document.createElement("div");
+      lk.className = "links followups-links";
+      const gh = document.createElement("a");
+      gh.href = ghLinkWithBase(agent.path, ghBase);
+      gh.target = "_blank";
+      gh.rel = "noopener noreferrer";
+      gh.textContent = "github";
+      lk.appendChild(gh);
+      const loc = document.createElement("button");
+      loc.type = "button";
+      loc.className = "js-agent-source";
+      loc.dataset.path = agent.path;
+      loc.textContent = "local";
+      loc.title = "View full markdown (copy)";
+      lk.appendChild(loc);
+      li.appendChild(lk);
+      ol.appendChild(li);
+    });
+    panel.appendChild(ol);
+    const body = card.querySelector(".card-body");
+    if (body) body.appendChild(panel);
+    return panel;
+  }
+
+  function closeAllFollowUps() {
+    resultsEl.querySelectorAll("article.card").forEach((c) => {
+      c.classList.remove("card-open");
+      const p = c.querySelector(".card-followups");
+      if (p) p.hidden = true;
+    });
+  }
+
+  function toggleCardFollowUps(card) {
+    const wasOpen = card.classList.contains("card-open");
+    closeAllFollowUps();
+    if (wasOpen) return;
+    const panel = ensureFollowUpsPanel(card);
+    if (!panel) return;
+    panel.hidden = false;
+    card.classList.add("card-open");
+  }
+
+  resultsEl.addEventListener("click", (e) => {
+    if (e.target.closest("a")) return;
+    if (e.target.closest("button.js-agent-source")) return;
+    if (e.target.closest("button.card-copy")) return;
+    if (e.target.closest("button.followup-copy")) return;
+    if (e.target.closest(".card-followups")) return;
+    const card = e.target.closest("article.card");
+    if (!card || !resultsEl.contains(card)) return;
+    if (!card.dataset.path) return;
+    toggleCardFollowUps(card);
+  });
+
+  function showGeminiLoading(ctx) {
+    const modelLabel = escapeHtml((ctx.modelLabel || "gemini").trim() || "gemini");
+    const temp = escapeHtml(String(ctx.temperature ?? ""));
+    const n = Number(ctx.divisionCount) || 0;
+    const agentN = Math.max(0, Number(ctx.agentCount) || 0);
+    const agentStr = escapeHtml(String(agentN));
+    const poolPlain =
+      n === 0 ? "full catalog (no division filter)" : `${n} division${n === 1 ? "" : "s"} · pre-filter active`;
+    const pool = escapeHtml(poolPlain);
+    metaEl.textContent = "POST /api/match · blocking on the ranker…";
+    if (btnMatchEl) {
+      btnMatchEl.classList.add("is-busy");
+      btnMatchEl.setAttribute("aria-busy", "true");
+    }
+    resultsEl.innerHTML =
+      '<div class="match-loading-root" role="status" aria-live="polite">' +
+      '<span class="sr-only">Loading Gemini agent rankings.</span>' +
+      '<div class="match-loading" aria-hidden="true">' +
+      '<div class="match-loading-chrome"><span class="match-loading-dots" aria-hidden="true">' +
+      '<i class="d1"></i><i class="d2"></i><i class="d3"></i></span> ranker · live session</div>' +
+      '<div class="match-loading-body">' +
+      '<div class="match-loading-line" style="--d:0ms"><span class="match-prompt">&gt;</span> POST <span class="dim">/api/match</span> <span class="accent">HTTP/1.1</span></div>' +
+      '<div class="match-loading-line" style="--d:85ms"><span class="match-prompt">&gt;</span> goal packet sealed <span class="dim">·</span> <span class="accent">' +
+      pool +
+      "</span></div>" +
+      '<div class="match-loading-line" style="--d:170ms"><span class="match-prompt">&gt;</span> paging <span class="accent">' +
+      agentStr +
+      "</span> agent shards into context budget</div>" +
+      '<div class="match-loading-line" style="--d:255ms"><span class="match-prompt">&gt;</span> invoking <span class="accent">' +
+      modelLabel +
+      '</span> <span class="dim">τ=' +
+      temp +
+      "</span></div>" +
+      '<div class="match-loading-line" style="--d:340ms"><span class="match-prompt">&gt;</span> softmax caucus in progress <span class="dim">·</span> do not refresh</div>' +
+      '<div class="match-loading-line match-loading-bit" style="--d:425ms"><span class="match-prompt">&gt;</span> <span class="dim">trace</span> <span class="hexstream">0x1a9f·e4·c0ffee</span> <span class="dim">· jitter ok</span></div>' +
+      "</div>" +
+      '<div class="match-loading-bar" aria-hidden="true"></div>' +
+      '<div class="match-loading-footer"><span class="match-loading-tag">RUNTIME</span> do not paste API keys into Twitch chat</div>' +
+      "</div></div>";
+  }
+
+  async function renderGemini() {
+    geminiSummaryEl.hidden = true;
+    geminiSummaryEl.innerHTML = "";
+    orchEl.hidden = true;
+    orchEl.innerHTML = "";
+    const goal = goalEl.value.trim();
+    if (!goal) {
+      metaEl.textContent = "describe your goal first.";
+      resultsEl.innerHTML = "";
+      return;
+    }
+    outSection.setAttribute("aria-busy", "true");
+    if (btnMatchEl) btnMatchEl.disabled = true;
+    try {
+      const selectedCats = Array.from(divisionBox.querySelectorAll("input:checked")).map((el) => el.dataset.category);
+      const extra = document.getElementById("extra-ctx").value.trim();
+      const body = {
+        goal,
+        categories: selectedCats.length ? selectedCats : [],
+      };
+      if (extra) body.extra = extra;
+      const keyVal = document.getElementById("api-key").value.trim();
+      if (keyVal) body.api_key = keyVal;
+      body.model = document.getElementById("model-select").value;
+      body.temperature = parseFloat(document.getElementById("temp").value);
+
+      const modelSelectEl = document.getElementById("model-select");
+      const modelOpt = modelSelectEl?.selectedOptions?.[0];
+      const modelLabelUi = (modelOpt?.textContent || modelSelectEl?.value || body.model || "").trim();
+      showGeminiLoading({
+        modelLabel: modelLabelUi,
+        divisionCount: selectedCats.length,
+        temperature: Number.isFinite(body.temperature) ? body.temperature : "",
+        agentCount: Array.isArray(CATALOG) ? CATALOG.length : 0,
+      });
+      let res;
+      try {
+        res = await fetch("/api/match", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        });
+      } catch {
+        metaEl.textContent =
+          "server unreachable. from repo root: python3 agent-matchmaker/webapp.py, then open the printed url (not file://)";
+        return;
+      }
+      let data = {};
+      try {
+        data = await res.json();
+      } catch {
+        metaEl.textContent = "bad response from server.";
+        return;
+      }
+      if (!data.ok) {
+        metaEl.textContent = data.error || "request failed.";
+        resultsEl.innerHTML =
+          '<p class="empty">' + escapeHtml(String(data.error || "Error")) + "</p>";
+        return;
+      }
+      const warns = data.warnings || [];
+      metaEl.textContent = warns.length ? warns.join(" ") : "gemini-ranked picks.";
+      const summary = data.summary;
+      if (summary) {
+        geminiSummaryEl.hidden = false;
+        geminiSummaryEl.innerHTML = "<strong>summary</strong> · " + escapeHtml(summary);
+      }
+      if (data.suggest_agents_orchestrator && data.orchestrator_rationale) {
+        orchEl.hidden = false;
+        orchEl.innerHTML =
+          "<strong>orchestration</strong> · " + escapeHtml(String(data.orchestrator_rationale));
+      }
+      const ghBase = data.github_base || "";
+      const matches = data.matches || [];
+      if (!matches.length) {
+        resultsEl.innerHTML = '<p class="empty">no matches returned. try a different description.</p>';
+        return;
+      }
+      const orchPlain =
+        data.suggest_agents_orchestrator && data.orchestrator_rationale
+          ? String(data.orchestrator_rationale).trim()
+          : "";
+      const summaryPlain = summary ? String(summary).trim() : "";
+      resultsEl.innerHTML = "";
+      matches.forEach((m, i) => {
+        const title = m.name || m.path;
+        const fitLabel = m.fit_score != null ? String(m.fit_score) + " out of 100" : "score not given";
+        const art = document.createElement("article");
+        art.className = "card";
+        art.dataset.path = m.path;
+        art.dataset.ghBase = ghBase;
+        art.style.cursor = "pointer";
+        art.title = "Click to show suggested follow-on agents for your prompt";
+        art.setAttribute("aria-label", `${i + 1}. ${title}, Gemini fit ${fitLabel}`);
+        const em = document.createElement("div");
+        em.className = "emoji";
+        em.textContent = m.emoji || "📄";
+        em.setAttribute("aria-hidden", "true");
+        const bodyDiv = document.createElement("div");
+        bodyDiv.className = "card-body";
+        const h = document.createElement("h3");
+        h.textContent = `${String(i + 1).padStart(2, "0")} · ${title}`;
+        const why = document.createElement("p");
+        why.className = "vibe";
+        why.textContent = m.why || "";
+        const pathEl = document.createElement("div");
+        pathEl.className = "path";
+        pathEl.textContent = m.path;
+        bodyDiv.appendChild(h);
+        bodyDiv.appendChild(why);
+        if (m.caveat) {
+          const c = document.createElement("p");
+          c.className = "vibe";
+          c.style.marginTop = "0.25rem";
+          c.textContent = "caveat: " + m.caveat;
+          bodyDiv.appendChild(c);
+        }
+        bodyDiv.appendChild(pathEl);
+        const aside = document.createElement("div");
+        aside.className = "card-aside";
+        const sc = document.createElement("div");
+        sc.className = "score";
+        sc.setAttribute("aria-hidden", "true");
+        sc.textContent = (m.fit_score != null ? m.fit_score : "—") + " / 100";
+        const links = document.createElement("div");
+        links.className = "links";
+        const gh = document.createElement("a");
+        gh.href = ghLinkWithBase(m.path, ghBase);
+        gh.target = "_blank";
+        gh.rel = "noopener noreferrer";
+        gh.textContent = "github";
+        links.appendChild(gh);
+        const loc = document.createElement("button");
+        loc.type = "button";
+        loc.className = "js-agent-source";
+        loc.dataset.path = m.path;
+        loc.textContent = "local";
+        loc.title = "View full markdown (copy)";
+        links.appendChild(loc);
+        const copyBtn = document.createElement("button");
+        wireMatchCopyBtn(copyBtn, {
+          goal,
+          extra,
+          mode: "gemini",
+          summary: summaryPlain,
+          orchestration: orchPlain,
+          rank: i + 1,
+          name: m.name || m.path,
+          path: m.path,
+          fit_score: m.fit_score != null ? m.fit_score : null,
+          heuristic_score: null,
+          why: (m.why || "").trim(),
+          caveat: m.caveat ? String(m.caveat).trim() : "",
+          github: ghLinkWithBase(m.path, ghBase),
+        });
+        aside.appendChild(sc);
+        aside.appendChild(copyBtn);
+        aside.appendChild(links);
+        art.appendChild(em);
+        art.appendChild(bodyDiv);
+        art.appendChild(aside);
+        resultsEl.appendChild(art);
+      });
+    } finally {
+      outSection.removeAttribute("aria-busy");
+      if (btnMatchEl) {
+        btnMatchEl.disabled = false;
+        btnMatchEl.classList.remove("is-busy");
+        btnMatchEl.removeAttribute("aria-busy");
+      }
+      resultsEl.querySelector(".match-loading-root")?.remove();
+    }
+  }
+
+  function render() {
+    geminiSummaryEl.hidden = true;
+    geminiSummaryEl.innerHTML = "";
+    const { list, multiDivision } = scoreAgents();
+    resultsEl.innerHTML = "";
+    const orch = CATALOG.find((a) => /orchestrator/i.test(a.name) && /specialized\//.test(a.path));
+    if (multiDivision && orch) {
+      orchEl.hidden = false;
+      orchEl.innerHTML =
+        "<strong>multi-track detected</strong> · consider <strong>" +
+        escapeHtml(orch.name) +
+        "</strong> — " +
+        escapeHtml(orch.vibe || orch.description.slice(0, 120)) +
+        ' <span class="links"><a target="_blank" rel="noopener noreferrer" href="' +
+        escapeHtml(ghLink(orch.path)) +
+        '">github</a> <button type="button" class="js-agent-source" data-path="' +
+        escapeHtml(orch.path) +
+        '">local</button></span>';
+    } else {
+      orchEl.hidden = true;
+      orchEl.innerHTML = "";
+    }
+
+    if (!list.length) {
+      metaEl.textContent = "no catalog loaded.";
+      resultsEl.innerHTML = "<p class=\"empty\">try reloading the page or rebuilding the catalog.</p>";
+      return;
+    }
+
+    metaEl.textContent =
+      list[0].score === 0
+        ? "no strong signal — showing balanced shortlist. add divisions or a richer description."
+        : "higher score ⇒ stronger match (heuristic, not magic).";
+
+    const goalH = goalEl.value.trim();
+    const extraH = (document.getElementById("extra-ctx").value || "").trim();
+    let orchExport = "";
+    if (!orchEl.hidden && orchEl.textContent) {
+      orchExport = orchEl.textContent.replace(/\s+/g, " ").trim();
+    }
+    list.forEach(({ agent, score }, i) => {
+      const art = document.createElement("article");
+      art.className = "card";
+      art.dataset.path = agent.path;
+      art.dataset.ghBase = "";
+      art.style.cursor = "pointer";
+      art.title = "Click to show suggested follow-on agents for your prompt";
+      art.setAttribute("aria-label", `${agent.name}, heuristic score ${Math.round(score)}`);
+      const em = document.createElement("div");
+      em.className = "emoji";
+      em.textContent = agent.emoji || "📄";
+      em.setAttribute("aria-hidden", "true");
+      const body = document.createElement("div");
+      body.className = "card-body";
+      const h = document.createElement("h3");
+      h.textContent = `${String(i + 1).padStart(2, "0")} · ${agent.name}`;
+      const v = document.createElement("p");
+      v.className = "vibe";
+      v.textContent = agent.vibe || agent.description.slice(0, 160) + (agent.description.length > 160 ? "…" : "");
+      const p = document.createElement("div");
+      p.className = "path";
+      p.textContent = agent.path;
+      body.appendChild(h);
+      body.appendChild(v);
+      body.appendChild(p);
+      const aside = document.createElement("div");
+      aside.className = "card-aside";
+      const sc = document.createElement("div");
+      sc.className = "score";
+      sc.setAttribute("aria-hidden", "true");
+      sc.textContent = "score " + Math.round(score);
+      const links = document.createElement("div");
+      links.className = "links";
+      const gh = document.createElement("a");
+      gh.href = ghLink(agent.path);
+      gh.target = "_blank";
+      gh.rel = "noopener noreferrer";
+      gh.textContent = "github";
+      links.appendChild(gh);
+      const loc = document.createElement("button");
+      loc.type = "button";
+      loc.className = "js-agent-source";
+      loc.dataset.path = agent.path;
+      loc.textContent = "local";
+      loc.title = "View full markdown (copy)";
+      links.appendChild(loc);
+      const copyBtn = document.createElement("button");
+      wireMatchCopyBtn(copyBtn, {
+        goal: goalH,
+        extra: extraH,
+        mode: "heuristic",
+        summary: "",
+        orchestration: orchExport,
+        rank: i + 1,
+        name: agent.name,
+        path: agent.path,
+        fit_score: null,
+        heuristic_score: Math.round(score),
+        why: (agent.vibe || agent.description || "").trim(),
+        caveat: "",
+        github: ghLink(agent.path),
+      });
+      aside.appendChild(sc);
+      aside.appendChild(copyBtn);
+      aside.appendChild(links);
+      art.appendChild(em);
+      art.appendChild(body);
+      art.appendChild(aside);
+      resultsEl.appendChild(art);
+    });
+  }
+
+  function ghLink(path) {
+    return "https://github.com/msitarzewski/agency-agents/blob/main/" + encodeURI(path);
+  }
+
+  function escapeHtml(s) {
+    return s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  }
+
+  function geminiAvailable() {
+    if (isFile || !useAiRankingEl || !useAiRankingEl.checked) return false;
+    if (!geminiInstalledCached) return false;
+    return serverGeminiKeyCached || clientApiKeyFilled();
+  }
+  function updateMatchButton() {
+    if (!btnMatchEl) return;
+    btnMatchEl.textContent = geminiAvailable() ? "ask gemini" : "find agents (offline)";
+  }
+  btnMatchEl.addEventListener("click", () => {
+    const run = geminiAvailable() ? renderGemini() : Promise.resolve(render());
+    void Promise.resolve(run).finally(() => scrollMatchesIntoViewIfNeeded());
+  });
+  document.getElementById("btn-clear").addEventListener("click", () => {
+    goalEl.value = "";
+    document.getElementById("extra-ctx").value = "";
+    document.getElementById("api-key").value = "";
+    if (rememberKeyEl) rememberKeyEl.checked = false;
+    try {
+      localStorage.removeItem(LS_GEMINI);
+      localStorage.removeItem(LS_GEMINI_REMEMBER);
+    } catch (_) {
+      /* ignore */
+    }
+    if (useAiRankingEl) useAiRankingEl.checked = serverGeminiKeyCached;
+    syncGeminiIndicator();
+    updateMatchButton();
+    closeRuntime();
+    const modelSelect = document.getElementById("model-select");
+    if (modelSelect) modelSelect.selectedIndex = 0;
+    tempEl.value = "0.25";
+    tempValEl.textContent = "0.25";
+    divisionBox.querySelectorAll("input").forEach((i) => (i.checked = false));
+    focusBox.querySelectorAll("input").forEach((i) => (i.checked = false));
+    resultsEl.innerHTML = "";
+    metaEl.textContent = "";
+    geminiSummaryEl.hidden = true;
+    geminiSummaryEl.innerHTML = "";
+    orchEl.hidden = true;
+    orchEl.innerHTML = "";
+    updateFilterBadge();
+  });
+
+  function initSettingsPanelActions() {
+    document.getElementById("settings-open-explore")?.addEventListener("click", () => {
+      closeRuntime();
+      setExploreOpen(true);
+      requestAnimationFrame(() => {
+        if (exploreSearchEl) exploreSearchEl.focus();
+      });
+    });
+    document.getElementById("settings-reset-explore-width")?.addEventListener("click", () => {
+      resetExploreSidebarWidth();
+    });
+    document.getElementById("settings-open-filters")?.addEventListener("click", () => {
+      closeRuntime();
+      openFiltersPopover();
+    });
+    document.getElementById("settings-clear-workspace")?.addEventListener("click", () => {
+      document.getElementById("btn-clear")?.click();
+    });
+  }
+
+  updateMatchButton();
+  initAgentSourceUi();
+  initExploreSidebar();
+  initSettingsPanelActions();
+  metaEl.textContent = "waiting on your prompt — describe what you're shipping.";
+})();
+  </script>
+</body>
+</html>
