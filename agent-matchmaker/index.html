@@ -694,6 +694,26 @@
       border: 0;
     }
 
+    @media (max-width: 900px) and (pointer: coarse) {
+      .explore-resize {
+        display: none !important;
+      }
+    }
+
+    /* Touch devices: avoid iOS input zoom (needs ≥16px) in landscape and on sub-desktop widths. */
+    @media (max-width: 959px) and (pointer: coarse) {
+      .text-in,
+      .goal,
+      select.text-in,
+      .explore-search,
+      #api-key,
+      #extra-ctx,
+      #model-select,
+      .agent-source-textarea {
+        font-size: 16px;
+      }
+    }
+
     @media (max-width: 900px) {
       :root {
         /* 100% of fixed containing block avoids classic 100vw + scrollbar horizontal overflow */
@@ -1041,14 +1061,53 @@
       -webkit-overflow-scrolling: touch;
     }
     @media (max-width: 959px) {
-      .bento-left-scroll {
-        max-height: min(44dvh, min(50svh, 22rem));
-        flex: 0 1 auto;
+      /* Narrow viewports (phones, small windows): one continuous scroll instead of
+         a locked viewport + ~44dvh cap on the prompt column (desktop ≥960px unchanged). */
+      html {
         overflow-y: auto;
+        overflow-x: hidden;
+        height: auto;
+        min-height: 100dvh;
+      }
+      body {
+        overflow: visible;
+        min-height: 100dvh;
+        height: auto;
+      }
+      .canvas {
+        flex: 1 0 auto;
+        min-height: min(100dvh, 100%);
+        overflow-x: hidden;
+      }
+      .bento-left-scroll {
+        max-height: none;
+        flex: 0 0 auto;
+        overflow: visible;
       }
       .bento-right-scroll {
-        flex: 1;
+        flex: 0 0 auto;
         min-height: 0;
+      }
+      .bento-right-scroll .results-column {
+        flex: 0 0 auto;
+        min-height: 0;
+      }
+      .bento-right-scroll .panel.panel-results {
+        flex: 0 0 auto;
+        min-height: 0;
+        overflow: visible;
+      }
+      .bento-right-scroll .panel.panel-results > .panel-body {
+        flex: 0 0 auto;
+        overflow: visible;
+        -webkit-overflow-scrolling: auto;
+      }
+      .app-window {
+        overflow: visible;
+      }
+      .app-window-body {
+        overflow: visible;
+        padding-bottom: max(0.65rem, env(safe-area-inset-bottom, 0px));
       }
     }
 
@@ -1635,7 +1694,7 @@
       padding: 0.85rem 0.9rem 0.85rem 1rem;
       background: var(--surface);
       display: grid;
-      grid-template-columns: auto 1fr auto;
+      grid-template-columns: auto minmax(0, 1fr) auto;
       gap: 0.7rem 0.95rem;
       align-items: start;
       transition: border-color 0.18s ease, background 0.18s ease, transform 0.18s ease;
@@ -1659,6 +1718,10 @@
       background: var(--surface-2);
     }
     article.card.card-open::before { background: var(--violet); }
+    article.card.card-open {
+      padding: 0.65rem 0.75rem 0.65rem 0.9rem;
+      gap: 0.45rem 0.65rem;
+    }
 
     article.card .card-copy {
       font-family: var(--font-mono);
@@ -1676,29 +1739,53 @@
     }
 
     .card-followups {
-      margin-top: 0.65rem;
-      padding-top: 0.65rem;
+      margin-top: 0.4rem;
+      padding-top: 0.45rem;
       border-top: 1px solid var(--line);
+      grid-column: 1 / -1;
+      min-width: 0;
     }
     .card-followups .followups-label {
       font-family: var(--font-mono);
-      font-size: 0.68rem;
+      font-size: 0.62rem;
       color: var(--muted);
-      margin: 0 0 0.45rem;
+      margin: 0 0 0.35rem;
       letter-spacing: 0.02em;
       text-transform: lowercase;
+      line-height: 1.35;
     }
     .card-followups ol.followups-list {
       margin: 0;
-      padding-left: 1.2rem;
+      padding: 0;
+      list-style: none;
+      counter-reset: followup-n;
       display: flex;
       flex-direction: column;
-      gap: 0.45rem;
+      gap: 0.35rem;
     }
     .card-followups li.followup-row {
-      font-size: 0.82rem;
+      counter-increment: followup-n;
+      position: relative;
+      padding-left: 1.55rem;
+      font-size: 0.8rem;
       color: var(--text-dim);
-      line-height: 1.45;
+      line-height: 1.35;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      gap: 0.12rem;
+      min-width: 0;
+    }
+    .card-followups li.followup-row::before {
+      content: counter(followup-n);
+      position: absolute;
+      left: 0;
+      top: 0.12rem;
+      width: 1.15rem;
+      text-align: right;
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      font-weight: 600;
+      color: var(--muted-2);
     }
     .card-followups li.followup-row strong {
       color: var(--text);
@@ -1706,14 +1793,18 @@
     }
     .followup-row-head {
       display: flex;
-      align-items: flex-start;
+      align-items: center;
       justify-content: space-between;
-      gap: 0.5rem;
-      flex-wrap: wrap;
+      gap: 0.4rem;
+      flex-wrap: nowrap;
+      min-width: 0;
     }
     .followup-row-head strong {
       flex: 1;
       min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
     .card-followups li.followup-row .followup-copy {
       font-family: var(--font-mono);
@@ -1731,30 +1822,67 @@
       pointer-events: auto;
     }
     .card-followups .followups-meta {
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
       font-family: var(--font-mono);
-      font-size: 0.68rem;
+      font-size: 0.62rem;
       color: var(--muted-2);
-      margin-top: 0.15rem;
+      margin-top: 0.05rem;
+      min-width: 0;
+    }
+    .card-followups .followups-meta-path {
+      flex: 1;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      color: var(--muted);
+    }
+    .card-followups .followups-meta-score {
+      flex-shrink: 0;
+      color: var(--muted-2);
     }
     .card-followups .followups-links {
-      margin-top: 0.25rem;
+      margin-top: 0.15rem;
+    }
+    .card-followups li.followup-row > .vibe {
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      margin-top: 0.08rem;
+      font-size: 0.76rem;
+      line-height: 1.38;
     }
 
     .card-aside {
       display: flex;
-      flex-direction: column;
-      align-items: flex-end;
-      gap: 0.45rem;
-      min-width: 6.5rem;
+      flex-direction: row;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 0.35rem;
+      max-width: 11rem;
+    }
+    .card-aside .score,
+    .card-aside .card-copy {
+      flex-shrink: 0;
+    }
+    .followup-row-head .followup-copy {
+      flex-shrink: 0;
     }
     @media (max-width: 560px) {
       article.card { grid-template-columns: 1fr; }
       .card-aside {
         align-items: flex-start;
-        flex-direction: row;
-        flex-wrap: wrap;
-        justify-content: space-between;
+        justify-content: flex-start;
         width: 100%;
+        max-width: none;
+      }
+      article.card.card-open .card-body .path {
+        white-space: normal;
+        word-break: break-word;
       }
     }
 
@@ -1782,12 +1910,24 @@
       margin: 0.3rem 0 0;
       line-height: 1.5;
     }
+    article.card.card-open .card-body .vibe {
+      margin-top: 0.2rem;
+      font-size: 0.82rem;
+      line-height: 1.42;
+    }
     .card-body .path {
-      font-size: 0.72rem;
+      font-size: 0.7rem;
       color: var(--muted);
       font-family: var(--font-mono);
       margin-top: 0.45rem;
       word-break: break-all;
+    }
+    article.card.card-open .card-body .path {
+      margin-top: 0.28rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      word-break: normal;
     }
     .card-body .path::before { content: "↳ "; color: var(--muted-2); }
 
@@ -2209,6 +2349,53 @@
     #filters-open[aria-expanded="true"] .disclosure-chevron {
       transform: rotate(90deg);
       color: var(--accent);
+    }
+
+    @media (max-width: 720px) {
+      /* Smartphone portrait/typical width: touch comfort + no iOS input zoom (16px+). */
+      html {
+        -webkit-tap-highlight-color: rgba(199, 255, 77, 0.12);
+      }
+      .wrap {
+        padding-left: max(env(safe-area-inset-left, 0px), 0.7rem);
+        padding-right: max(env(safe-area-inset-right, 0px), 0.7rem);
+        padding-top: max(env(safe-area-inset-top, 0px), 0.6rem);
+      }
+      .masthead h1 {
+        font-size: clamp(1.5rem, 6.2vw, 2.2rem);
+      }
+      .masthead .lead {
+        font-size: 0.95rem;
+        line-height: 1.5;
+        max-width: none;
+      }
+      .primary,
+      .ghost,
+      .chip-btn,
+      .topbar-runtime-btn,
+      .filters-open-btn,
+      button.js-agent-source,
+      .popover-close,
+      #filters-close,
+      #agent-source-close {
+        min-height: 44px;
+        touch-action: manipulation;
+      }
+      .explore-cat {
+        min-height: 2.25rem;
+        padding: 0.35rem 0.55rem;
+        touch-action: manipulation;
+      }
+      .sidebar-toggle {
+        min-width: 22px;
+        min-height: 48px;
+        width: 18px;
+        height: 52px;
+        touch-action: manipulation;
+      }
+      .canvas.explore-open .sidebar-toggle {
+        left: calc(var(--sidebar-w) - 1px);
+      }
     }
 
     @media (prefers-reduced-motion: reduce) {
@@ -3675,7 +3862,7 @@
     const label = document.createElement("p");
     label.className = "followups-label";
     label.textContent =
-      "Suggested next agents for your prompt (same ranking signal as offline match — run in list order)";
+      "Suggested next agents · same rank signal as offline match · run in list order";
     panel.appendChild(label);
     if (!rows.length) {
       const empty = document.createElement("p");
@@ -3683,8 +3870,7 @@
       empty.style.margin = "0";
       empty.textContent = "No additional catalog entries ranked for this prompt.";
       panel.appendChild(empty);
-      const body = card.querySelector(".card-body");
-      if (body) body.appendChild(panel);
+      card.appendChild(panel);
       return panel;
     }
     const ol = document.createElement("ol");
@@ -3695,7 +3881,7 @@
       const head = document.createElement("div");
       head.className = "followup-row-head";
       const step = document.createElement("strong");
-      step.textContent = `${idx + 1}. ${agent.emoji ? agent.emoji + " " : ""}${agent.name}`;
+      step.textContent = `${agent.emoji ? agent.emoji + " " : ""}${agent.name}`;
       head.appendChild(step);
       const rawBlurb = (agent.vibe || agent.description || "").trim();
       const blurbExport = rawBlurb.length > 320 ? rawBlurb.slice(0, 319) + "…" : rawBlurb;
@@ -3717,12 +3903,19 @@
       li.appendChild(head);
       const meta = document.createElement("div");
       meta.className = "followups-meta";
-      meta.textContent = `${agent.path} · match score ${Math.round(score)}`;
+      const pathSpan = document.createElement("span");
+      pathSpan.className = "followups-meta-path";
+      pathSpan.textContent = agent.path;
+      pathSpan.title = agent.path;
+      const scoreSpan = document.createElement("span");
+      scoreSpan.className = "followups-meta-score";
+      scoreSpan.textContent = `match ${Math.round(score)}`;
+      meta.appendChild(pathSpan);
+      meta.appendChild(scoreSpan);
       li.appendChild(meta);
       const blurb = document.createElement("div");
       blurb.className = "vibe";
-      blurb.style.marginTop = "0.2rem";
-      blurb.textContent = rawBlurb.length > 220 ? rawBlurb.slice(0, 219) + "…" : rawBlurb;
+      blurb.textContent = rawBlurb.length > 180 ? rawBlurb.slice(0, 179) + "…" : rawBlurb;
       li.appendChild(blurb);
       const lk = document.createElement("div");
       lk.className = "links followups-links";
@@ -3743,8 +3936,7 @@
       ol.appendChild(li);
     });
     panel.appendChild(ol);
-    const body = card.querySelector(".card-body");
-    if (body) body.appendChild(panel);
+    card.appendChild(panel);
     return panel;
   }
 
@@ -3927,6 +4119,7 @@
         const pathEl = document.createElement("div");
         pathEl.className = "path";
         pathEl.textContent = m.path;
+        pathEl.title = m.path;
         bodyDiv.appendChild(h);
         bodyDiv.appendChild(why);
         if (m.caveat) {
@@ -4055,6 +4248,7 @@
       const p = document.createElement("div");
       p.className = "path";
       p.textContent = agent.path;
+      p.title = agent.path;
       body.appendChild(h);
       body.appendChild(v);
       body.appendChild(p);
