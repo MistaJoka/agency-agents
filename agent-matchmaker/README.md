@@ -54,11 +54,15 @@ python3 scripts/build_agent_matchmaker.py
 
 ### Run
 
+`run-agent-matchmaker.sh` is a **bash** script. Run it with the shell, not with `python3` (using `python3` on that path will raise `SyntaxError`).
+
 ```bash
 ./scripts/run-agent-matchmaker.sh
+# or: bash ./scripts/run-agent-matchmaker.sh
+# If ./… is “permission denied”: chmod +x scripts/run-agent-matchmaker.sh
 ```
 
-Or:
+Or start Python directly (same app, no `.env` sourcing from the shell wrapper):
 
 ```bash
 python3 agent-matchmaker/webapp.py
@@ -86,6 +90,7 @@ If a model name errors (API lists change), choose another in the form (defaults 
   - `./scripts/qa-reality-capture.sh` — same, plus full-page PNGs when Playwright is available. The script uses **`./.venv/bin/python3`** when that path exists; otherwise it uses `python3` from your environment.
 - If the app is already running: `NO_SERVER=1 ./scripts/qa-reality-capture.sh` (uses `BASE_URL`, default `http://127.0.0.1:8765`).
 - Default readiness in JSON is **NEEDS_WORK** until both HTTP and visual runs succeed (matches an evidence-first integration review).
+- **Gemini end-to-end (optional):** `MATCH_SMOKE=1 ./scripts/qa-reality-capture.sh` adds a `POST /api/match` call with a tiny goal. The server must run with `google-generativeai` installed (`requirements-app.txt`) and expose an API key to the server process, **or** you set `GEMINI_API_KEY` / `GOOGLE_API_KEY` / `MATCH_SMOKE_API_KEY` in the environment when running QA so the client can send `api_key` in the JSON body. If smoke cannot run (no Gemini on server, no key), status is **skipped** and the script still exits **0**. For CI gates, use **`MATCH_SMOKE_STRICT=1`**: then skipped or failed smoke exits **non-zero** and downgrades the JSON verdict. Direct: `python3 agent-matchmaker/qa_reality_check.py --match-smoke [--match-smoke-strict]`.
 
 ### QA virtualenv (macOS / Homebrew Python, PEP 668)
 

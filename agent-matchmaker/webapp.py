@@ -309,14 +309,22 @@ def main() -> None:
     print(f"Serving {APP_DIR}")
     print(f"Open http://{args.host}:{args.port}/")
     if genai is None:
+        pip_hint = (
+            f"{sys.executable} -m pip install -r "
+            f"{(REPO_ROOT / 'agent-matchmaker' / 'requirements-app.txt').as_posix()}"
+        )
         print(
-            "Gemini: install google-generativeai — pip install -r agent-matchmaker/requirements-app.txt"
+            "Gemini Python SDK not importable in this process — the UI will report “no sdk”.\n"
+            f"  Interpreter: {sys.executable}\n"
+            f"  Install: {pip_hint}\n"
+            "  Or from repo root: ./scripts/run-agent-matchmaker.sh (uses .venv when present).\n"
             + (
-                " (API key already visible to this server from .env / env)."
+                "  (API key already visible to this server from .env / env — only the SDK is missing.)\n"
                 if _gemini_ready
                 else ""
             ),
             file=sys.stderr,
+            end="",
         )
     elif _gemini_ready:
         print("Gemini: API key found (.env, env, or .gemini_api_key) — enable “Use Gemini” in the UI.", file=sys.stderr)

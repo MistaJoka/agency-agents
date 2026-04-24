@@ -8,6 +8,8 @@
 #   BASE_URL=http://127.0.0.1:9000 ./scripts/qa-reality-capture.sh
 #   NO_SERVER=1 ./scripts/qa-reality-capture.sh   # you already started webapp.py
 #   HTTP_ONLY=1 ./scripts/qa-reality-capture.sh   # skip Playwright (stdlib evidence only)
+#   MATCH_SMOKE=1 ./scripts/qa-reality-capture.sh  # POST /api/match smoke (optional GEMINI_API_KEY for body)
+#   MATCH_SMOKE=1 MATCH_SMOKE_STRICT=1 ...       # CI: fail if smoke skipped or errors
 #
 # Evidence: agent-matchmaker/qa-screenshots/test-results.json (+ .png when Playwright works)
 
@@ -25,6 +27,8 @@ BASE_URL="${BASE_URL:-http://127.0.0.1:8765}"
 export BASE_URL
 NO_SERVER="${NO_SERVER:-0}"
 HTTP_ONLY="${HTTP_ONLY:-0}"
+MATCH_SMOKE="${MATCH_SMOKE:-0}"
+MATCH_SMOKE_STRICT="${MATCH_SMOKE_STRICT:-0}"
 PORT="${PORT:-8765}"
 
 _started_server=""
@@ -64,6 +68,11 @@ _ensure_server
 args=("--base-url" "$BASE_URL")
 if [[ "$HTTP_ONLY" == "1" ]]; then
   args+=("--http-only")
+fi
+if [[ "$MATCH_SMOKE_STRICT" == "1" ]]; then
+  args+=("--match-smoke" "--match-smoke-strict")
+elif [[ "$MATCH_SMOKE" == "1" ]]; then
+  args+=("--match-smoke")
 fi
 
 "$PYTHON" "$ROOT/agent-matchmaker/qa_reality_check.py" "${args[@]}"

@@ -276,6 +276,83 @@
       padding: 0.4rem 0.5rem;
     }
 
+    /* Category pills: collapsible shell */
+    .explore-cats-block {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+
+    .explore-cats-toggle {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      gap: 0.5rem;
+      margin: 0;
+      padding: 0.32rem 0.45rem;
+      border-radius: var(--radius-xs);
+      border: 1px solid var(--line-2);
+      background: linear-gradient(180deg, var(--surface-2) 0%, var(--surface) 100%);
+      box-shadow: var(--shadow-1);
+      font-family: var(--font-mono);
+      font-size: 0.62rem;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      cursor: pointer;
+      text-align: left;
+      transition:
+        border-color 0.22s ease,
+        background 0.22s ease,
+        color 0.22s ease,
+        box-shadow 0.22s ease;
+    }
+
+    .explore-cats-toggle:hover {
+      border-color: var(--line-3);
+      color: var(--text);
+    }
+
+    .explore-cats-toggle:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+
+    .explore-cats-toggle-chev {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 1.25rem;
+      height: 1.25rem;
+      border-radius: 4px;
+      background: var(--elev);
+      color: var(--accent);
+      font-size: 0.55rem;
+      line-height: 1;
+      transition: transform 0.42s var(--sidebar-ease), background 0.2s ease;
+    }
+
+    .explore-cats-block.is-collapsed .explore-cats-toggle-chev {
+      transform: rotate(-90deg);
+    }
+
+    .explore-cats-surface {
+      display: grid;
+      grid-template-rows: 1fr;
+      transition: grid-template-rows 0.42s var(--sidebar-ease);
+    }
+
+    .explore-cats-block.is-collapsed .explore-cats-surface {
+      grid-template-rows: 0fr;
+    }
+
+    .explore-cats-clip {
+      min-height: 0;
+      overflow: hidden;
+    }
+
     .explore-cats {
       display: flex;
       flex-wrap: wrap;
@@ -283,6 +360,20 @@
       max-height: 5.5rem;
       overflow-y: auto;
       padding-bottom: 0.1rem;
+      opacity: 1;
+      transform: translateY(0);
+      transition:
+        opacity 0.32s var(--sidebar-ease),
+        transform 0.32s var(--sidebar-ease);
+    }
+
+    .explore-cats-block.is-collapsed .explore-cats {
+      opacity: 0;
+      transform: translateY(-4px);
+      pointer-events: none;
+      transition:
+        opacity 0.26s var(--sidebar-ease),
+        transform 0.26s var(--sidebar-ease);
     }
 
     .explore-cat {
@@ -725,6 +816,206 @@
       font-style: italic;
     }
 
+    /* ────────── dedicated agent page (hash route #/agent/...) ────────── */
+    .agent-dedicated {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 84;
+      flex-direction: column;
+      background:
+        radial-gradient(900px 520px at 88% -8%, rgba(154, 124, 255, 0.12), transparent 58%),
+        radial-gradient(640px 420px at -5% 12%, rgba(199, 255, 77, 0.06), transparent 55%),
+        var(--bg-0);
+      color: var(--text);
+      font-family: var(--font-ui);
+    }
+    .agent-dedicated.is-open {
+      display: flex;
+    }
+    .agent-dedicated-head {
+      flex-shrink: 0;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.5rem 0.85rem;
+      padding: max(env(safe-area-inset-top, 0px), 0.55rem) clamp(0.85rem, 3vw, 1.25rem) 0.55rem;
+      border-bottom: 1px solid var(--line-2);
+      background: rgba(0, 0, 0, 0.35);
+      backdrop-filter: blur(8px);
+    }
+    .agent-dedicated-head .ghost {
+      font-size: 0.78rem;
+      padding: 0.35rem 0.55rem;
+    }
+    .agent-dedicated-kicker {
+      font-family: var(--font-mono);
+      font-size: 0.62rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--muted-2);
+    }
+    .agent-dedicated-scroll {
+      flex: 1 1 auto;
+      min-height: 0;
+      overflow: auto;
+      -webkit-overflow-scrolling: touch;
+      padding: clamp(0.85rem, 2.5vw, 1.35rem) clamp(0.9rem, 4vw, 2.25rem) 2rem;
+      max-width: 1100px;
+      margin: 0 auto;
+      width: 100%;
+      box-sizing: border-box;
+    }
+    .agent-dedicated-toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.45rem;
+      align-items: center;
+      margin: 0 0 1rem;
+      padding: 0.55rem 0.65rem;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--line-2);
+      background: rgba(0, 0, 0, 0.25);
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+    }
+    .agent-dedicated-toolbar .ghost,
+    .agent-dedicated-toolbar button.primary {
+      font-size: 0.72rem;
+      padding: 0.38rem 0.65rem;
+    }
+    .agent-dedicated-toolbar .primary {
+      background: rgba(199, 255, 77, 0.16);
+      color: var(--accent);
+      border: 1px solid rgba(199, 255, 77, 0.45);
+    }
+    .agent-dedicated-doc {
+      margin-top: 1.75rem;
+      padding-top: 1.25rem;
+      border-top: 1px solid var(--line);
+    }
+    .agent-dedicated-sectiontitle {
+      margin: 0 0 0.85rem;
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--violet);
+    }
+    .agent-md-render .agent-md-h {
+      margin: 1.1rem 0 0.45rem;
+      font-size: clamp(1rem, 2.4vw, 1.2rem);
+      font-weight: 600;
+      color: var(--text);
+      scroll-margin-top: 4rem;
+    }
+    .agent-md-render .agent-md-h:first-child {
+      margin-top: 0;
+    }
+    .agent-md-render .agent-md-p {
+      margin: 0 0 0.55rem;
+      font-size: 0.9rem;
+      line-height: 1.55;
+      color: var(--text-dim);
+    }
+    .agent-md-render .agent-md-ul {
+      margin: 0.25rem 0 0.65rem;
+      padding-left: 1.2rem;
+      color: var(--text-dim);
+      font-size: 0.88rem;
+      line-height: 1.45;
+    }
+    .agent-md-render .agent-md-lang {
+      font-family: var(--font-mono);
+      font-size: 0.58rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted-2);
+      margin: 0.65rem 0 0.2rem;
+    }
+    .agent-md-render .agent-md-pre {
+      margin: 0 0 0.75rem;
+      padding: 0.65rem 0.75rem;
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      line-height: 1.45;
+      border-radius: var(--radius-xs);
+      border: 1px solid var(--line-2);
+      background: rgba(0, 0, 0, 0.4);
+      overflow: auto;
+      max-height: min(52vh, 420px);
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    .agent-dedicated-related {
+      margin-top: 2rem;
+      padding-top: 1.25rem;
+      border-top: 1px solid var(--line);
+    }
+    .agent-dedicated-related > h2 {
+      margin: 0 0 0.65rem;
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .agent-dedicated-peerlist {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+    .agent-dedicated-peerlist li {
+      margin-bottom: 0.45rem;
+      font-size: 0.86rem;
+    }
+    .agent-dedicated-peerlink {
+      color: var(--accent-dim);
+      text-decoration: none;
+      font-weight: 500;
+    }
+    .agent-dedicated-peerlink:hover {
+      color: var(--accent);
+      text-decoration: underline;
+    }
+    .agent-dedicated-peermeta {
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      color: var(--muted-2);
+    }
+    .agent-dedicated-empty {
+      color: var(--muted);
+      font-size: 0.86rem;
+    }
+    details.agent-dedicated-raw {
+      margin-top: 1.25rem;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-xs);
+      background: rgba(0, 0, 0, 0.2);
+    }
+    details.agent-dedicated-raw > summary {
+      cursor: pointer;
+      padding: 0.5rem 0.65rem;
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    details.agent-dedicated-raw pre {
+      margin: 0;
+      padding: 0.65rem 0.75rem 0.85rem;
+      max-height: min(40vh, 320px);
+      overflow: auto;
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      line-height: 1.4;
+      border-top: 1px solid var(--line);
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
     .agent-source-backdrop {
       position: fixed;
       inset: 0;
@@ -1088,6 +1379,8 @@
     .dot-violet { background: var(--violet); box-shadow: 0 0 0 3px var(--violet-wash); }
     .dot-warn { background: #f5c24b; box-shadow: 0 0 0 3px rgba(245, 194, 75, 0.18); }
     .dot-err { background: var(--danger); box-shadow: 0 0 0 3px rgba(255, 106, 106, 0.15); }
+    .dot-ai-on { background: #5ed98b; box-shadow: 0 0 0 3px rgba(94, 217, 139, 0.22); }
+    .dot-ai-local { background: var(--accent); box-shadow: 0 0 0 3px var(--accent-wash); }
     .chip-btn {
       appearance: none;
       border: 1px solid var(--line-2);
@@ -1130,6 +1423,10 @@
     #runtime-launcher[data-state="pending"] { color: var(--muted); }
     #runtime-launcher[data-state="off"],
     #runtime-launcher[data-state="err"] { color: var(--muted-2); }
+    #runtime-launcher[data-ai="on"] { border-color: rgba(94, 217, 139, 0.4); }
+    #runtime-launcher[data-ai="local"] { border-color: rgba(88, 166, 255, 0.35); }
+    #runtime-launcher[data-ai="blocked"],
+    #runtime-launcher[data-ai="needkey"] { border-color: rgba(245, 194, 75, 0.35); }
     .topbar-live {
       display: inline-flex; align-items: center; gap: 0.4rem;
       text-transform: uppercase; letter-spacing: 0.14em;
@@ -1194,9 +1491,10 @@
     @media (min-width: 960px) {
       .bento-workspace {
         display: grid;
-        grid-template-columns: minmax(300px, 0.9fr) minmax(380px, 1.4fr);
+        /* Matches (output) are the product — give the right column more width and weight. */
+        grid-template-columns: minmax(260px, 0.68fr) minmax(400px, 1.88fr);
         grid-template-rows: 1fr;
-        gap: 0.85rem 0.95rem;
+        gap: 0.85rem 1.05rem;
         align-items: stretch;
       }
     }
@@ -1356,6 +1654,98 @@
       line-height: 1;
     }
     .panel-results h2::before { color: var(--violet); }
+
+    /* Goal column: supporting input — visually quieter than matches */
+    .bento-tile-goal.panel {
+      background: linear-gradient(180deg, rgba(0, 0, 0, 0.22), var(--bg-1));
+      border-color: rgba(255, 255, 255, 0.04);
+    }
+    .bento-tile-goal.panel > h2 {
+      color: var(--muted-2);
+      font-size: 0.68rem;
+      letter-spacing: 0.16em;
+    }
+    .bento-tile-goal.panel > h2#lbl-goal {
+      text-transform: none;
+      letter-spacing: 0.02em;
+      font-weight: 600;
+    }
+    .bento-tile-goal.panel > h2::before {
+      color: var(--muted-2);
+      opacity: 0.85;
+    }
+    .bento-tile-goal .prompt-shell {
+      border-color: rgba(255, 255, 255, 0.06);
+      background: rgba(0, 0, 0, 0.15);
+    }
+    .bento-tile-goal .prompt-shell:focus-within {
+      border-color: var(--line-3);
+      box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.05);
+    }
+    .bento-tile-goal .prompt-shell::before {
+      color: var(--muted-2);
+    }
+    /* Primary action lives in the goal column but should not out-shout the matches panel */
+    .bento-tile-goal button.primary {
+      background: rgba(199, 255, 77, 0.14);
+      color: var(--accent);
+      border: 1px solid rgba(199, 255, 77, 0.42);
+      box-shadow: none;
+    }
+    .bento-tile-goal button.primary::before {
+      opacity: 0.9;
+    }
+    .bento-tile-goal button.primary:hover {
+      filter: none;
+      background: rgba(199, 255, 77, 0.22);
+      border-color: rgba(199, 255, 77, 0.55);
+      box-shadow: 0 0 20px -10px rgba(199, 255, 77, 0.35);
+    }
+    .bento-tile-goal button.primary.is-busy:disabled {
+      background: rgba(199, 255, 77, 0.42);
+      color: #0a0b0d;
+      border-color: rgba(199, 255, 77, 0.65);
+    }
+
+    /* Matches column: primary surface — output is the valuable artifact */
+    .panel.panel-results {
+      background:
+        radial-gradient(120% 80% at 100% 0%, rgba(154, 124, 255, 0.11), transparent 55%),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.03), var(--bg-1));
+      border-color: rgba(154, 124, 255, 0.28);
+      box-shadow:
+        0 0 0 1px rgba(154, 124, 255, 0.08),
+        0 24px 56px -32px rgba(0, 0, 0, 0.55),
+        0 0 100px -48px rgba(154, 124, 255, 0.18);
+    }
+    .panel.panel-results > h2 {
+      color: var(--text-dim);
+      font-size: 0.78rem;
+      letter-spacing: 0.11em;
+    }
+    .panel.panel-results > h2#lbl-matches {
+      text-transform: none;
+      letter-spacing: 0.02em;
+      font-weight: 600;
+    }
+    .panel.panel-results > h2::before {
+      color: var(--violet);
+      text-shadow: 0 0 14px rgba(154, 124, 255, 0.45);
+    }
+    .panel.panel-results .results-meta {
+      color: var(--text-dim);
+      font-size: 0.82rem;
+      line-height: 1.5;
+    }
+    .panel.panel-results .results-meta::before {
+      color: var(--violet);
+      opacity: 0.85;
+    }
+    @media (min-width: 960px) {
+      .bento-right-scroll .panel.panel-results > .panel-body {
+        min-height: min(42dvh, 22rem);
+      }
+    }
 
     .panel-body {
       padding: clamp(0.9rem, 2vw, 1.1rem) clamp(0.9rem, 2.2vw, 1.15rem);
@@ -2203,6 +2593,12 @@
       font-family: var(--font-mono);
       font-size: 0.86rem;
     }
+    .panel.panel-results .empty {
+      color: var(--text-dim);
+      font-style: normal;
+      font-size: 0.88rem;
+      line-height: 1.55;
+    }
 
     /* ────────── AI module / toggle ────────── */
     .ai-ranking-block { padding-top: 0; }
@@ -2639,7 +3035,23 @@
                 spellcheck="false"
               />
             </label>
-            <div id="explore-cats" class="explore-cats" role="tablist" aria-label="Category index"></div>
+            <div class="explore-cats-block" id="explore-cats-block">
+              <button
+                type="button"
+                id="explore-cats-toggle"
+                class="explore-cats-toggle"
+                aria-expanded="true"
+                aria-controls="explore-cats"
+              >
+                <span>Categories</span>
+                <span class="explore-cats-toggle-chev" aria-hidden="true">▼</span>
+              </button>
+              <div class="explore-cats-surface">
+                <div class="explore-cats-clip">
+                  <div id="explore-cats" class="explore-cats" role="tablist" aria-label="Category index"></div>
+                </div>
+              </div>
+            </div>
           </div>
           <div class="explore-list-wrap" id="explore-list-wrap">
             <div id="explore-list" class="explore-list"></div>
@@ -2673,7 +3085,7 @@
       <div class="app-window">
       <div class="topbar" role="complementary" aria-label="Console status">
         <div class="topbar-left">
-          <span class="topbar-brand">agency<span class="slash">/</span>matchmaker</span>
+          <span class="topbar-brand">agency</span>
           <span class="topbar-path">~/agents · catalog.json</span>
         </div>
         <div class="topbar-right">
@@ -2688,14 +3100,14 @@
             title="Settings · ranker, workspace, shortcuts"
           >
             <span class="topbar-runtime-dot dot dot-muted" aria-hidden="true"></span>
-            <span class="topbar-runtime-label">online</span>
+            <span class="topbar-runtime-label">wait</span>
           </button>
         </div>
       </div>
 
       <main id="main-content" class="app-window-body">
         <header class="masthead" id="masthead">
-          <p class="kicker">the agency / matchmaker</p>
+          <p class="kicker">the agency</p>
           <h1>Define your outcome.<span class="cursor" aria-hidden="true"></span></h1>
           <p class="lead">
             Say what you want shipped. Gemini scans this repo's agents, picks who fits, says why. No Gemini? Simple local matcher still runs.
@@ -2715,15 +3127,19 @@
         <div class="bento-workspace" id="main-workspace">
           <div class="bento-left-scroll">
             <section class="panel bento-tile-goal" aria-labelledby="lbl-goal">
-              <h2 id="lbl-goal">prompt · gemini</h2>
+              <h2 id="lbl-goal">Goal</h2>
               <div class="panel-body">
-                <label class="hint" for="goal">describe the outcome — the more context, the better the ranking</label>
                 <div class="prompt-shell">
-                  <textarea id="goal" class="goal" placeholder="e.g. launch a WeChat mini-program shop with analytics, or harden our K8s cluster before Black Friday"></textarea>
+                  <textarea
+                    id="goal"
+                    class="goal"
+                    aria-labelledby="lbl-goal"
+                    placeholder="e.g. launch a WeChat mini-program shop with analytics, or harden our K8s cluster before Black Friday"
+                  ></textarea>
                 </div>
                 <div class="hero-actions">
                   <div class="actions actions-hero">
-                    <button type="button" class="primary" id="btn-match">ask gemini</button>
+                    <button type="button" class="primary" id="btn-match">Run</button>
                     <button type="button" class="ghost" id="btn-clear">clear</button>
                   </div>
                   <p class="action-hint">
@@ -2756,7 +3172,7 @@
           <div class="bento-right-scroll">
             <div class="results-column bento-tile-results">
               <section class="panel panel-results" id="out-section" aria-labelledby="lbl-matches">
-                <h2 id="lbl-matches">matches · stream</h2>
+                <h2 id="lbl-matches">Agent</h2>
                 <div class="panel-body">
                   <div id="orchestrator-callout" class="callout" hidden></div>
                   <div id="gemini-summary" class="callout gemini-summary" hidden></div>
@@ -2888,6 +3304,22 @@
     </div>
   </div>
 
+  <section
+    id="agent-dedicated"
+    class="agent-dedicated"
+    aria-hidden="true"
+    hidden
+    aria-labelledby="agent-dedicated-title"
+  >
+    <header class="agent-dedicated-head">
+      <button type="button" class="ghost" id="agent-dedicated-back" aria-label="Back to matchmaker">
+        ← matchmaker
+      </button>
+      <span class="agent-dedicated-kicker">agent profile · shareable url</span>
+    </header>
+    <div class="agent-dedicated-scroll" id="agent-dedicated-body"></div>
+  </section>
+
   <button
     type="button"
     id="agent-source-backdrop"
@@ -2919,6 +3351,7 @@
   <script>
 (async function () {
   const isFile = window.location.protocol === "file:";
+  const initialMatchmakerTitle = document.title;
 
   /** Resolve e.g. /api/health relative to this page (GitHub project Pages uses /user/repo/… not domain root). */
   function resolveApi(absolutePath) {
@@ -3182,39 +3615,115 @@
   function setRuntimeLauncherState(state) {
     if (!runtimeLauncher) return;
     runtimeLauncher.dataset.state = state;
+    refreshRuntimeLauncherVisual();
+  }
+
+  /** Top bar chip: connection + whether Smart match (Gemini) will actually run. */
+  function refreshRuntimeLauncherVisual() {
+    if (!runtimeLauncher) return;
     const dotEl = runtimeLauncher.querySelector(".topbar-runtime-dot");
     const labelEl = runtimeLauncher.querySelector(".topbar-runtime-label");
-    let dotClass = "topbar-runtime-dot dot dot-muted";
-    let label = "online";
-    let aria = "Online — open settings";
-    if (state === "err") {
-      dotClass = "topbar-runtime-dot dot dot-err";
-      label = "offline";
-      aria = "Offline — open settings";
-    } else if (state === "off") {
-      dotClass = "topbar-runtime-dot dot dot-muted";
-      label = "offline";
-      aria = "Offline — open settings";
-    } else if (state === "pending") {
-      dotClass = "topbar-runtime-dot dot dot-muted";
-      label = "online";
-      aria = "Connecting — open settings";
-    } else if (state === "warn") {
-      dotClass = "topbar-runtime-dot dot dot-warn";
-      label = "online";
-      aria = "Online (warning) — open settings";
-    } else if (state === "needkey") {
-      dotClass = "topbar-runtime-dot dot dot-warn";
-      label = "online";
-      aria = "Online — add API key in settings";
-    } else if (state === "ready") {
-      dotClass = "topbar-runtime-dot dot";
-      label = "online";
-      aria = "Online — open settings";
+    const state = runtimeLauncher.dataset.state || "pending";
+
+    const setChip = (ai, dotClass, label, aria, titleExtra) => {
+      runtimeLauncher.dataset.ai = ai;
+      if (dotEl) dotEl.className = dotClass;
+      if (labelEl) labelEl.textContent = label;
+      runtimeLauncher.setAttribute("aria-label", aria);
+      runtimeLauncher.setAttribute(
+        "title",
+        "Settings · " + (titleExtra || "ranker, workspace, shortcuts")
+      );
+    };
+
+    if (isFile) {
+      setChip(
+        "file",
+        "topbar-runtime-dot dot dot-muted",
+        "file",
+        "File mode — Gemini disabled; heuristic ranking only — open settings",
+        "file:// · local ranker only"
+      );
+      return;
     }
-    if (dotEl) dotEl.className = dotClass;
-    if (labelEl) labelEl.textContent = label;
-    runtimeLauncher.setAttribute("aria-label", aria);
+
+    if (state === "err") {
+      setChip(
+        "unavailable",
+        "topbar-runtime-dot dot dot-err",
+        "no api",
+        "Cannot reach local webapp — open settings",
+        "server unreachable · /api/health failed"
+      );
+      return;
+    }
+
+    if (state === "pending") {
+      setChip(
+        "pending",
+        "topbar-runtime-dot dot dot-muted",
+        "wait",
+        "Checking server and ranker — open settings",
+        "connecting…"
+      );
+      return;
+    }
+
+    if (state === "warn") {
+      setChip(
+        "blocked",
+        "topbar-runtime-dot dot dot-warn",
+        "no sdk",
+        "Gemini Python SDK missing — install to enable smart match — open settings",
+        "SDK missing · smart match blocked"
+      );
+      return;
+    }
+
+    if (state === "needkey") {
+      setChip(
+        "needkey",
+        "topbar-runtime-dot dot dot-warn",
+        "no key",
+        "No Gemini API key on server — paste key in settings or use .env — open settings",
+        "needs API key for Gemini"
+      );
+      return;
+    }
+
+    if (state === "off") {
+      setChip(
+        "local",
+        "topbar-runtime-dot dot dot-ai-local",
+        "local",
+        "Smart match unavailable in this mode — open settings",
+        "local ranker"
+      );
+      return;
+    }
+
+    /* ready: server + SDK OK — label reflects whether Smart match is on and will run */
+    if (geminiAvailable()) {
+      setChip(
+        "on",
+        "topbar-runtime-dot dot dot-ai-on",
+        "ai on",
+        "Gemini ranker enabled — smart match will run — open settings",
+        "Gemini on · smart match active"
+      );
+    } else {
+      const whyLocal =
+        useAiRankingEl && !useAiRankingEl.checked
+          ? "smart match off — heuristic ranking"
+          : "smart match on but waiting for key or SDK";
+      setChip(
+        "local",
+        "topbar-runtime-dot dot dot-ai-local",
+        "local",
+        "Local heuristic ranker — smart match off or blocked — open settings",
+        whyLocal
+      );
+    }
   }
 
   if (runtimeLauncher) setRuntimeLauncherState(isFile ? "off" : "pending");
@@ -3226,13 +3735,16 @@
 
   /** Keep chip + status aligned with the local /api/health and the runtime API-key field */
   function syncGeminiIndicator() {
-    if (!aiServerStatus || !useAiRankingEl) return;
+    if (!aiServerStatus || !useAiRankingEl) {
+      refreshRuntimeLauncherVisual();
+      return;
+    }
     if (isFile) return;
     if (!geminiHealthResolved) return;
 
     if (!geminiInstalledCached && serverGeminiKeyCached) {
       aiServerStatus.textContent =
-        "Python SDK missing — pip install -r agent-matchmaker/requirements-app.txt. Key is already on the server (.env); install SDK then restart.";
+        "Python SDK missing in the process running webapp.py — use repo .venv: .venv/bin/python3 -m pip install -r agent-matchmaker/requirements-app.txt, then ./scripts/run-agent-matchmaker.sh (key on server is OK).";
       useAiRankingEl.disabled = true;
       useAiRankingEl.checked = false;
       setRuntimeLauncherState("warn");
@@ -3241,7 +3753,7 @@
 
     if (!geminiInstalledCached) {
       aiServerStatus.textContent =
-        "install Gemini Python SDK — from repo root: pip install -r agent-matchmaker/requirements-app.txt, restart webapp.";
+        "install Gemini Python SDK in the same Python as webapp.py — repo root: python3 -m venv .venv && .venv/bin/python3 -m pip install -r agent-matchmaker/requirements-app.txt && ./scripts/run-agent-matchmaker.sh";
       useAiRankingEl.disabled = true;
       useAiRankingEl.checked = false;
       setRuntimeLauncherState("warn");
@@ -3464,12 +3976,15 @@
   const exploreBackdropEl = document.getElementById("explore-backdrop");
   const exploreSearchEl = document.getElementById("explore-search");
   const exploreCatsEl = document.getElementById("explore-cats");
+  const exploreCatsBlockEl = document.getElementById("explore-cats-block");
+  const exploreCatsToggleEl = document.getElementById("explore-cats-toggle");
   const exploreListEl = document.getElementById("explore-list");
   const exploreResizeEl = document.getElementById("explore-resize");
   const exploreInnerEl = document.querySelector(".explore-inner");
   const canvasRootEl = document.querySelector(".canvas");
   const LS_EXPLORE_OPEN = "agency-agents:matchmaker:explore-open";
   const LS_EXPLORE_WIDTH = "agency-agents:matchmaker:explore-width-px";
+  const LS_EXPLORE_CATS_COLLAPSED = "agency-agents:matchmaker:explore-cats-collapsed";
 
   function exploreSidebarWidthMin() {
     return 220;
@@ -3732,6 +4247,12 @@
         e.preventDefault();
         return;
       }
+      const ded = document.getElementById("agent-dedicated");
+      if (ded && ded.classList.contains("is-open")) {
+        closeAgentDedicatedPage();
+        e.preventDefault();
+        return;
+      }
       const sp = document.getElementById("agent-spotlight");
       if (sp && sp.classList.contains("is-open")) {
         closeAgentSpotlight();
@@ -3795,13 +4316,13 @@
     art.setAttribute("aria-label", `Open agent brief: ${agent.name}`);
     art.addEventListener("click", (e) => {
       if (e.target.closest("a, button")) return;
-      openAgentSpotlight(agent);
+      navigateToAgentPage(agent);
     });
     art.addEventListener("keydown", (e) => {
       if (e.key !== "Enter" && e.key !== " ") return;
       e.preventDefault();
       if (e.target.closest("a, button")) return;
-      openAgentSpotlight(agent);
+      navigateToAgentPage(agent);
     });
     art.appendChild(em);
     art.appendChild(mid);
@@ -3898,11 +4419,43 @@
     }
   }
 
+  function applyExploreCatsCollapsed(collapsed) {
+    if (!exploreCatsBlockEl || !exploreCatsToggleEl || !exploreCatsEl) return;
+    exploreCatsBlockEl.classList.toggle("is-collapsed", collapsed);
+    exploreCatsToggleEl.setAttribute("aria-expanded", collapsed ? "false" : "true");
+    exploreCatsToggleEl.setAttribute(
+      "aria-label",
+      collapsed ? "Expand category filters" : "Collapse category filters",
+    );
+    if (collapsed) exploreCatsEl.setAttribute("inert", "");
+    else exploreCatsEl.removeAttribute("inert");
+  }
+
   function initExploreSidebar() {
     if (!exploreSidebarEl || !exploreToggleEl || !exploreCatsEl || !exploreSearchEl) return;
 
     loadStoredExploreSidebarWidth();
     initExploreSidebarResize();
+
+    let catsCollapsed = false;
+    try {
+      catsCollapsed = localStorage.getItem(LS_EXPLORE_CATS_COLLAPSED) === "1";
+    } catch (_) {
+      /* ignore */
+    }
+    applyExploreCatsCollapsed(catsCollapsed);
+    if (exploreCatsToggleEl && exploreCatsBlockEl) {
+      exploreCatsToggleEl.addEventListener("click", () => {
+        const next = !exploreCatsBlockEl.classList.contains("is-collapsed");
+        applyExploreCatsCollapsed(next);
+        try {
+          if (next) localStorage.setItem(LS_EXPLORE_CATS_COLLAPSED, "1");
+          else localStorage.removeItem(LS_EXPLORE_CATS_COLLAPSED);
+        } catch (_) {
+          /* ignore */
+        }
+      });
+    }
 
     let startOpen = false;
     try {
@@ -4873,33 +5426,102 @@
     return card;
   }
 
-  function closeAgentSpotlight() {
-    const mast = document.getElementById("masthead");
-    const ws = document.getElementById("main-workspace");
-    const sp = document.getElementById("agent-spotlight");
-    if (sp) {
-      sp.classList.remove("is-open");
-      sp.setAttribute("aria-hidden", "true");
-    }
-    if (mast) {
-      mast.style.display = "";
-      mast.removeAttribute("aria-hidden");
-    }
-    if (ws) {
-      ws.style.display = "";
-      ws.removeAttribute("aria-hidden");
-    }
+  function slugId(s) {
+    const t = String(s || "")
+      .toLowerCase()
+      .replace(/[^\w\u4e00-\u9fff]+/g, "-")
+      .replace(/^-|-$/g, "");
+    return t.slice(0, 48) || "section";
   }
 
-  function openAgentSpotlight(agent) {
-    const mast = document.getElementById("masthead");
-    const ws = document.getElementById("main-workspace");
-    const sp = document.getElementById("agent-spotlight");
-    const bodyEl = document.getElementById("spotlight-body");
-    if (!sp || !bodyEl || !agent) return;
-    const parts = inferSpotlightParts(agent);
-    bodyEl.replaceChildren();
+  function bodyAfterLeadingH1(md) {
+    let s = stripFrontmatter(String(md || ""));
+    const lines = s.split(/\r?\n/);
+    let i = 0;
+    while (i < lines.length && !lines[i].trim()) i++;
+    if (lines[i] && lines[i].startsWith("# ")) {
+      i++;
+      while (i < lines.length && lines[i].trim()) i++;
+      while (i < lines.length && !lines[i].trim()) i++;
+    }
+    return lines.slice(i).join("\n").trim();
+  }
 
+  function appendMarkdownish(root, text) {
+    const lines = String(text || "").split(/\r?\n/);
+    let i = 0;
+    const buf = [];
+    function flushPara() {
+      const t = buf.join("\n").trim();
+      buf.length = 0;
+      if (!t) return;
+      const p = document.createElement("p");
+      p.className = "agent-md-p";
+      p.textContent = stripInlineMd(t);
+      root.appendChild(p);
+    }
+    while (i < lines.length) {
+      const line = lines[i];
+      const trimmed = line.trim();
+      if (trimmed.startsWith("```")) {
+        flushPara();
+        const lang = trimmed.slice(3).trim();
+        i++;
+        const code = [];
+        while (i < lines.length && !lines[i].trim().startsWith("```")) {
+          code.push(lines[i]);
+          i++;
+        }
+        if (i < lines.length) i++;
+        const lab = document.createElement("div");
+        lab.className = "agent-md-lang";
+        lab.textContent = lang || "code";
+        const pre = document.createElement("pre");
+        pre.className = "agent-md-pre";
+        pre.textContent = code.join("\n");
+        root.appendChild(lab);
+        root.appendChild(pre);
+        continue;
+      }
+      const hm = line.match(/^(#{2,6})\s+(.+)$/);
+      if (hm) {
+        flushPara();
+        const level = hm[1].length;
+        const title = hm[2].trim();
+        const tag = level <= 2 ? "h2" : "h3";
+        const hx = document.createElement(tag);
+        hx.className = "agent-md-h";
+        hx.id = "md-" + slugId(title + "-" + i);
+        hx.textContent = title;
+        root.appendChild(hx);
+        i++;
+        continue;
+      }
+      if (/^\s*[\-\*]\s+/.test(line)) {
+        flushPara();
+        const ul = document.createElement("ul");
+        ul.className = "agent-md-ul";
+        while (i < lines.length && /^\s*[\-\*]\s+/.test(lines[i])) {
+          const li = document.createElement("li");
+          li.textContent = stripInlineMd(lines[i].replace(/^\s*[\-\*]\s+/, ""));
+          ul.appendChild(li);
+          i++;
+        }
+        root.appendChild(ul);
+        continue;
+      }
+      if (!trimmed) {
+        flushPara();
+        i++;
+        continue;
+      }
+      buf.push(line);
+      i++;
+    }
+    flushPara();
+  }
+
+  function buildAgentSpotlightHero(agent, titleId) {
     const hero = document.createElement("div");
     hero.className = "agent-spotlight-hero";
     const emo = document.createElement("div");
@@ -4910,7 +5532,7 @@
     ht.className = "agent-spotlight-hero-text";
     const h2 = document.createElement("h2");
     h2.className = "agent-spotlight-title";
-    h2.id = "spotlight-title";
+    h2.id = titleId;
     h2.textContent = agent.name;
     const pathP = document.createElement("p");
     pathP.className = "agent-spotlight-path";
@@ -4940,11 +5562,12 @@
     ht.appendChild(actions);
     hero.appendChild(emo);
     hero.appendChild(ht);
-    bodyEl.appendChild(hero);
+    return hero;
+  }
 
+  function buildAgentSpotlightInsightGrid(agent, parts) {
     const grid = document.createElement("div");
     grid.className = "agent-spotlight-grid";
-
     grid.appendChild(
       makeSpotlightCard("What they're good for", (inner) => {
         appendParagraph(inner, agent.description);
@@ -4958,9 +5581,8 @@
           em.textContent = "No extra narrative in the markdown — use the description above.";
           inner.appendChild(em);
         }
-      })
+      }),
     );
-
     grid.appendChild(
       makeSpotlightCard("Outputs & examples", (inner) => {
         appendBulletList(inner, parts.outBullets);
@@ -4982,9 +5604,8 @@
             "Structured templates and code samples live in the agent file — open \"view full markdown\" to paste into your workflow, or ask Gemini to match when you describe a concrete deliverable.";
           inner.appendChild(em);
         }
-      })
+      }),
     );
-
     const catLabel = DIVISION_LABELS[agent.category] || agent.category;
     grid.appendChild(
       makeSpotlightCard("When to use this agent", (inner) => {
@@ -4993,12 +5614,260 @@
         appendBulletList(inner, parts.whenBullets);
         appendParagraph(
           inner,
-          `Reach for this profile when the work clearly sits in ${catLabel} and you want the behaviors, guardrails, and artifacts implied by the repo's agent contract — not for unrelated domains where a different specialist will rank higher.`
+          `Reach for this profile when the work clearly sits in ${catLabel} and you want the behaviors, guardrails, and artifacts implied by the repo's agent contract — not for unrelated domains where a different specialist will rank higher.`,
         );
-      })
+      }),
     );
+    return grid;
+  }
 
-    bodyEl.appendChild(grid);
+  let agentDedicatedHashSync = false;
+  let matchmakerInitialTitle = "";
+
+  function agentPathFromHash() {
+    const h = String(location.hash || "");
+    const m = /^#\/agent\/(.+)$/.exec(h);
+    if (!m) return "";
+    try {
+      return decodeURIComponent(m[1]);
+    } catch (_) {
+      return "";
+    }
+  }
+
+  function agentHashForPath(path) {
+    return "#/agent/" + encodeURIComponent(String(path || "").trim());
+  }
+
+  function navigateToAgentPage(agent) {
+    if (!agent || !agent.path) return;
+    openAgentDedicatedPage(agent);
+    const want = agentHashForPath(agent.path);
+    if (location.hash !== want) {
+      agentDedicatedHashSync = true;
+      location.hash = want;
+      queueMicrotask(() => {
+        agentDedicatedHashSync = false;
+      });
+    }
+  }
+
+  function buildDedicatedToolbar(agent) {
+    const bar = document.createElement("div");
+    bar.className = "agent-dedicated-toolbar";
+    const copyPath = document.createElement("button");
+    copyPath.type = "button";
+    copyPath.className = "ghost";
+    copyPath.textContent = "copy path";
+    copyPath.addEventListener("click", async () => {
+      try {
+        await navigator.clipboard.writeText(agent.path);
+        copyPath.textContent = "copied";
+        setTimeout(() => {
+          copyPath.textContent = "copy path";
+        }, 1400);
+      } catch (_) {
+        /* ignore */
+      }
+    });
+    const act = document.createElement("button");
+    act.type = "button";
+    act.className = "ghost";
+    act.textContent = "copy activation line";
+    act.title = "One line you can paste into your AI tool to invoke this agent";
+    act.addEventListener("click", async () => {
+      const line = `Activate agency agent: ${agent.name} (${agent.path})`;
+      try {
+        await navigator.clipboard.writeText(line);
+        act.textContent = "copied";
+        setTimeout(() => {
+          act.textContent = "copy activation line";
+        }, 1600);
+      } catch (_) {
+        /* ignore */
+      }
+    });
+    const useBtn = document.createElement("button");
+    useBtn.type = "button";
+    useBtn.className = "primary";
+    useBtn.textContent = "use in matchmaker";
+    useBtn.title = "Return to workspace and paste an activation hint in the goal field";
+    useBtn.addEventListener("click", () => {
+      const goal = document.getElementById("goal");
+      if (goal) {
+        goal.value = `Goal: (describe your outcome)\n\nContext: I want to work with the "${agent.name}" agent (${agent.path}).`;
+        goal.focus();
+      }
+      closeAgentDedicatedPage();
+    });
+    bar.appendChild(copyPath);
+    bar.appendChild(act);
+    bar.appendChild(useBtn);
+    return bar;
+  }
+
+  function buildDedicatedRelatedSection(agent) {
+    const sec = document.createElement("section");
+    sec.className = "agent-dedicated-related";
+    const h = document.createElement("h2");
+    h.textContent = "More in this division";
+    sec.appendChild(h);
+    const peers = CATALOG.filter((a) => a.category === agent.category && a.path !== agent.path).sort((a, b) =>
+      a.name.localeCompare(b.name),
+    );
+    if (!peers.length) {
+      const p = document.createElement("p");
+      p.className = "agent-dedicated-empty";
+      p.textContent = "No other agents in this division.";
+      sec.appendChild(p);
+      return sec;
+    }
+    const ul = document.createElement("ul");
+    ul.className = "agent-dedicated-peerlist";
+    for (const p of peers.slice(0, 16)) {
+      const li = document.createElement("li");
+      const a = document.createElement("a");
+      a.href = agentHashForPath(p.path);
+      a.className = "agent-dedicated-peerlink";
+      a.textContent = `${p.emoji ? p.emoji + " " : ""}${p.name}`;
+      const sp = document.createElement("span");
+      sp.className = "agent-dedicated-peermeta";
+      sp.textContent = " · " + p.path;
+      li.appendChild(a);
+      li.appendChild(sp);
+      ul.appendChild(li);
+    }
+    sec.appendChild(ul);
+    return sec;
+  }
+
+  function openAgentDedicatedPage(agent) {
+    const root = document.getElementById("agent-dedicated");
+    const bodyEl = document.getElementById("agent-dedicated-body");
+    if (!root || !bodyEl || !agent) return;
+    closeAgentSpotlight();
+    closeRuntime();
+    closeFiltersPopover();
+    closeAgentSourceModal();
+    setExploreOpen(false);
+    bodyEl.replaceChildren();
+    document.title = String(agent.name || "Agent") + " · agency";
+
+    bodyEl.appendChild(buildDedicatedToolbar(agent));
+    bodyEl.appendChild(buildAgentSpotlightHero(agent, "agent-dedicated-title"));
+    const parts = inferSpotlightParts(agent);
+    bodyEl.appendChild(buildAgentSpotlightInsightGrid(agent, parts));
+
+    const docWrap = document.createElement("article");
+    docWrap.className = "agent-dedicated-doc";
+    const dh = document.createElement("h2");
+    dh.className = "agent-dedicated-sectiontitle";
+    dh.textContent = "Full profile (markdown)";
+    docWrap.appendChild(dh);
+    const mdRoot = document.createElement("div");
+    mdRoot.className = "agent-md-render";
+    const mdBody = bodyAfterLeadingH1(agent.source || "");
+    appendMarkdownish(mdRoot, mdBody || stripFrontmatter(String(agent.source || "")));
+    docWrap.appendChild(mdRoot);
+    bodyEl.appendChild(docWrap);
+
+    const raw = document.createElement("details");
+    raw.className = "agent-dedicated-raw";
+    const sm = document.createElement("summary");
+    sm.textContent = "Raw source (copy-safe)";
+    raw.appendChild(sm);
+    const pre = document.createElement("pre");
+    pre.textContent = String(agent.source || "(no source embedded — rebuild catalog)");
+    raw.appendChild(pre);
+    bodyEl.appendChild(raw);
+
+    bodyEl.appendChild(buildDedicatedRelatedSection(agent));
+
+    root.hidden = false;
+    root.classList.add("is-open");
+    root.setAttribute("aria-hidden", "false");
+    document.getElementById("agent-dedicated-back")?.focus();
+  }
+
+  function closeAgentDedicatedPage() {
+    const root = document.getElementById("agent-dedicated");
+    const bodyEl = document.getElementById("agent-dedicated-body");
+    const wasOpen = !!(root && root.classList.contains("is-open"));
+    if (root) {
+      root.classList.remove("is-open");
+      root.setAttribute("aria-hidden", "true");
+      root.hidden = true;
+    }
+    if (bodyEl) bodyEl.replaceChildren();
+    if (wasOpen) document.title = initialMatchmakerTitle;
+    if (wasOpen && String(location.hash || "").startsWith("#/agent/")) {
+      agentDedicatedHashSync = true;
+      history.replaceState(null, "", location.pathname + location.search);
+      queueMicrotask(() => {
+        agentDedicatedHashSync = false;
+      });
+    }
+  }
+
+  function syncAgentDedicatedFromHash() {
+    if (agentDedicatedHashSync) return;
+    const p = agentPathFromHash();
+    if (!p) {
+      closeAgentDedicatedPage();
+      return;
+    }
+    const agent = CATALOG.find((a) => a.path === p);
+    if (!agent) {
+      closeAgentDedicatedPage();
+      return;
+    }
+    openAgentDedicatedPage(agent);
+  }
+
+  function initAgentDedicatedRouting() {
+    document.getElementById("agent-dedicated-back")?.addEventListener("click", () => {
+      closeAgentDedicatedPage();
+    });
+    document.getElementById("agent-dedicated")?.addEventListener("click", (e) => {
+      const btn = e.target.closest("button.js-agent-source");
+      if (!btn || !btn.dataset.path) return;
+      e.preventDefault();
+      openAgentSourceForPath(btn.dataset.path);
+    });
+    window.addEventListener("hashchange", () => {
+      syncAgentDedicatedFromHash();
+    });
+    syncAgentDedicatedFromHash();
+  }
+
+  function closeAgentSpotlight() {
+    const mast = document.getElementById("masthead");
+    const ws = document.getElementById("main-workspace");
+    const sp = document.getElementById("agent-spotlight");
+    if (sp) {
+      sp.classList.remove("is-open");
+      sp.setAttribute("aria-hidden", "true");
+    }
+    if (mast) {
+      mast.style.display = "";
+      mast.removeAttribute("aria-hidden");
+    }
+    if (ws) {
+      ws.style.display = "";
+      ws.removeAttribute("aria-hidden");
+    }
+  }
+
+  function openAgentSpotlight(agent) {
+    const mast = document.getElementById("masthead");
+    const ws = document.getElementById("main-workspace");
+    const sp = document.getElementById("agent-spotlight");
+    const bodyEl = document.getElementById("spotlight-body");
+    if (!sp || !bodyEl || !agent) return;
+    const parts = inferSpotlightParts(agent);
+    bodyEl.replaceChildren();
+    bodyEl.appendChild(buildAgentSpotlightHero(agent, "spotlight-title"));
+    bodyEl.appendChild(buildAgentSpotlightInsightGrid(agent, parts));
 
     if (mast) {
       mast.style.display = "none";
@@ -5022,7 +5891,8 @@
   }
   function updateMatchButton() {
     if (!btnMatchEl) return;
-    btnMatchEl.textContent = geminiAvailable() ? "ask gemini" : "find agents (offline)";
+    btnMatchEl.textContent = "Run";
+    refreshRuntimeLauncherVisual();
   }
   btnMatchEl.addEventListener("click", () => {
     const run = geminiAvailable() ? renderGemini() : Promise.resolve(render());
@@ -5057,6 +5927,7 @@
     orchEl.innerHTML = "";
     updateFilterBadge();
     closeAgentSpotlight();
+    closeAgentDedicatedPage();
   });
 
   function initSettingsPanelActions() {
@@ -5082,8 +5953,10 @@
   updateMatchButton();
   initAgentSourceUi();
   initExploreSidebar();
+  initAgentDedicatedRouting();
   initSettingsPanelActions();
-  metaEl.textContent = "waiting on your prompt — describe what you're shipping.";
+  metaEl.textContent =
+    "Ranked agents appear here — this panel is the deliverable. Add a goal on the left, then run match.";
 })();
   </script>
 </body>
