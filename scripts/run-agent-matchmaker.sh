@@ -7,6 +7,7 @@
 #   ./scripts/run-agent-matchmaker.sh
 #   bash ./scripts/run-agent-matchmaker.sh
 # Do NOT: python3 ./scripts/run-agent-matchmaker.sh  → SyntaxError (Python tries to parse shell).
+# If you need a Python entry: python3 scripts/run_agent_matchmaker.py
 
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -21,10 +22,10 @@ else
   PYTHON="python3"
 fi
 
-if ! "$PYTHON" -c "import google.generativeai" 2>/dev/null; then
+if ! "$PYTHON" -c "from google import genai" 2>/dev/null; then
   echo "" >&2
-  echo "Gemini SDK missing for: $PYTHON" >&2
-  echo "  The matchmaker UI will show “no sdk” until google-generativeai is installed in THIS interpreter." >&2
+  echo "Gemini SDK (google.genai) missing for: $PYTHON" >&2
+  echo "  The matchmaker UI will show “no sdk” until google-genai is installed in THIS interpreter." >&2
   echo "  Fix (repo root):" >&2
   echo "    python3 -m venv .venv && .venv/bin/python3 -m pip install -r agent-matchmaker/requirements-app.txt" >&2
   echo "  Then start again with this script (it auto-picks .venv/bin/python3 when present)." >&2

@@ -24,6 +24,12 @@ Born from a Reddit thread and months of iteration, **The Agency** is a growing c
 
 ## ⚡ Quick Start
 
+### Project Operating System
+
+For project intent, MVP boundaries, architecture notes, regression checks, FMAE QA, and AI handoff rules, start with [`docs/project-operating-system/00_START_HERE.md`](docs/project-operating-system/00_START_HERE.md). This is an overlay for planning and quality control; it does not replace the existing agent catalog structure.
+
+**ASLF QA memory** (evidence-backed testing notes, regression memory, risk map): [`docs/aslf/README.md`](docs/aslf/README.md).
+
 ### Option 1: Use with Claude Code (Recommended)
 
 ```bash
@@ -978,4 +984,3 @@ To everyone who has opened a PR, filed an issue, started a Discussion, or simply
 [⭐ Star this repo](https://github.com/msitarzewski/agency-agents) • [🍴 Fork it](https://github.com/msitarzewski/agency-agents/fork) • [🐛 Report an issue](https://github.com/msitarzewski/agency-agents/issues) • [❤️ Sponsor](https://github.com/sponsors/msitarzewski)
 
 Made with ❤️ by the community, for the community
-

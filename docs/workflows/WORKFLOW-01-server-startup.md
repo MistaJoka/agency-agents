@@ -17,7 +17,7 @@ Source: `agent-matchmaker/webapp.py::main`, `matchmaker_lib.ensure_catalog_exist
 
 ## Prerequisites
 - Python 3 available at `python3`.
-- `pip install -r agent-matchmaker/requirements-app.txt` (optional — server still starts without `google-generativeai`, but `/api/match` returns 503 until installed).
+- `pip install -r agent-matchmaker/requirements-app.txt` (optional — server still starts without `google-genai`, but `/api/match` returns 503 until installed).
 - At least one agent markdown file with valid frontmatter under one of `AGENT_DIRS` if catalog needs building.
 - `agent-matchmaker/index.template.html` present (for initial build).
 

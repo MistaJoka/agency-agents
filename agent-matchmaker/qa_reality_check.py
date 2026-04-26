@@ -125,7 +125,7 @@ def _check_match_smoke(base: str, health: dict[str, Any]) -> dict[str, Any]:
             "status": "skipped",
             "reason": (
                 "Server reports gemini_installed: false — use the same Python as "
-                "`pip install -r agent-matchmaker/requirements-app.txt` when starting webapp.py"
+                "`pip install -r agent-matchmaker/requirements-app.txt` (google-genai) when starting webapp.py"
             ),
             "url": url,
         }
@@ -246,6 +246,167 @@ def _check_index(base: str) -> dict[str, Any]:
     }
 
 
+def _playwright_interaction_flows(base: str) -> dict[str, Any]:
+    """
+    Hash route #/agent/…, dedicated overlay, Back/Esc, copy/use/markdown, explore link regression.
+    """
+    try:
+        from playwright.sync_api import expect, sync_playwright
+    except ImportError:
+        return {
+            "status": "skipped",
+            "reason": "playwright not installed (pip install -r agent-matchmaker/requirements-qa.txt)",
+        }
+
+    base = base.rstrip("/")
+    steps: list[dict[str, str]] = []
+
+    def _step(name: str, **info: str) -> None:
+        row: dict[str, str] = {"name": name, **{k: str(v) for k, v in info.items()}}
+        steps.append(row)
+
+    try:
+        with sync_playwright() as p:
+            browser = p.chromium.launch(headless=True)
+            try:
+                context = browser.new_context(viewport={"width": 1280, "height": 800})
+                try:
+                    context.grant_permissions(
+                        ["clipboard-read", "clipboard-write"],
+                        origin=base,
+                    )
+                except (OSError, Exception):  # noqa: BLE001
+                    pass
+                page = context.new_page()
+                page.set_default_timeout(60_000)
+                page.goto(f"{base}/", wait_until="load", timeout=60_000)
+                _step("load_index")
+                if not page.locator("#explore-sidebar.is-open").count():
+                    page.locator("#sidebar-toggle").first.click()
+                page.wait_for_selector(".explore-row", state="visible", timeout=20_000)
+                _step("explore_open")
+
+                path_txt = page.locator(".explore-row .explore-row-path").first.inner_text()
+                page.locator(".explore-row .explore-row-mid").first.click()
+                ded = page.locator("#agent-dedicated")
+                src_modal = page.locator("#agent-source-modal")
+                expect(ded).to_be_visible()
+                expect(ded).to_have_class(re.compile(r"\bis-open\b"))
+                _step("dedicated_from_explore", path=path_txt.strip()[:200])
+                h0 = page.evaluate("() => location.hash || ''")
+                if not h0.startswith("#/agent/"):
+                    return {
+                        "status": "error",
+                        "error": f"expected #/agent/ hash, got {h0!r}",
+                        "steps": steps,
+                    }
+
+                page.get_by_role("button", name="copy path").first.click()
+                page.wait_for_timeout(400)
+                _step("copy_path_clicked")
+                page.get_by_role("button", name="copy activation line").first.click()
+                page.wait_for_timeout(400)
+                _step("copy_activation_clicked")
+                page.get_by_role("button", name="use in matchmaker").first.click()
+                expect(ded).to_be_hidden()
+                goal = page.locator("#goal").input_value()
+                if path_txt.strip() not in goal and "agent" not in goal.lower():
+                    return {
+                        "status": "error",
+                        "error": "use in matchmaker did not prime goal with agent path",
+                        "steps": steps,
+                    }
+                _step("use_in_matchmaker_primed_goal")
+
+                if not page.locator("#explore-sidebar.is-open").count():
+                    page.locator("#sidebar-toggle").first.click()
+                page.wait_for_selector(".explore-row", state="visible", timeout=15_000)
+                page.locator(".explore-row .explore-row-mid").first.click()
+                expect(ded).to_be_visible()
+                page.locator("#agent-dedicated button.js-agent-source").first.click()
+                page.wait_for_selector("#agent-source-modal:not([hidden])", timeout=15_000)
+                expect(src_modal).to_be_visible()
+                _step("view_full_markdown_opens_source_modal")
+                page.keyboard.press("Escape")
+                expect(src_modal).to_be_hidden()
+                _step("esc_closes_source_modal_dedicated_stays_open")
+                expect(ded).to_be_visible()
+
+                page.get_by_label("Back to matchmaker").first.click()
+                expect(ded).to_be_hidden()
+                h_back = page.evaluate("() => location.hash || ''")
+                if h_back.startswith("#/agent/"):
+                    return {
+                        "status": "error",
+                        "error": f"hash not cleared after back, got {h_back!r}",
+                        "steps": steps,
+                    }
+                t_back = page.title()
+                if "matchmaker" not in t_back.lower():
+                    return {
+                        "status": "error",
+                        "error": f"title not restored after back: {t_back!r}",
+                        "steps": steps,
+                    }
+                _step("back_clears_hash")
+
+                if not page.locator("#explore-sidebar.is-open").count():
+                    page.locator("#sidebar-toggle").first.click()
+                page.wait_for_selector(".explore-row", state="visible", timeout=15_000)
+                page.locator(".explore-row .explore-row-mid").first.click()
+                expect(ded).to_be_visible()
+                page.keyboard.press("Escape")
+                expect(ded).to_be_hidden()
+                h_esc = page.evaluate("() => location.hash || ''")
+                if h_esc.startswith("#/agent/"):
+                    return {
+                        "status": "error",
+                        "error": f"esc did not clear hash, got {h_esc!r}",
+                        "steps": steps,
+                    }
+                _step("escape_closes_dedicated")
+
+                page.goto(
+                    f"{base}/#/agent/encoded-not-in-catalog%2Ffile.md", wait_until="load", timeout=30_000
+                )
+                page.wait_for_timeout(500)
+                expect(ded).to_be_hidden()
+                _step("invalid_hash_closes_dedicated")
+
+                page.goto(f"{base}/", wait_until="load", timeout=30_000)
+                if not page.locator("#explore-sidebar.is-open").count():
+                    page.locator("#sidebar-toggle").first.click()
+                page.wait_for_selector(".explore-row", state="visible", timeout=15_000)
+                page.locator(".explore-row a:text-is('github')").first.click()
+                page.wait_for_timeout(800)
+                h_gh1 = page.evaluate("() => location.hash || ''")
+                if h_gh1.startswith("#/agent/"):
+                    return {
+                        "status": "error",
+                        "error": f"github link should not set #/agent/ hash, got {h_gh1!r}",
+                        "steps": steps,
+                    }
+                _step("explore_github_no_unwanted_agent_hash")
+
+                page.locator(".explore-row").first.locator("button.js-agent-source").click()
+                page.wait_for_selector("#agent-source-modal:not([hidden])", timeout=15_000)
+                expect(src_modal).to_be_visible()
+                h_loc = page.evaluate("() => location.hash || ''")
+                if h_loc.startswith("#/agent/"):
+                    return {
+                        "status": "error",
+                        "error": "local should not set #/agent/ hash (stopPropagation)",
+                        "steps": steps,
+                    }
+                _step("explore_local_opens_source_modal", hash=(h_loc or "")[:200])
+            finally:
+                browser.close()
+    except Exception as e:  # noqa: BLE001
+        return {"status": "error", "error": str(e), "steps": steps}
+
+    return {"status": "ok", "steps": steps}
+
+
 def _screenshots_playwright(base: str, out_dir: Path) -> dict[str, Any]:
     try:
         from playwright.sync_api import sync_playwright
@@ -330,12 +491,18 @@ def _screenshots_playwright(base: str, out_dir: Path) -> dict[str, Any]:
     }
 
 
-def _verdict(checks: dict[str, Any], shots: dict[str, Any], http_only: bool) -> dict[str, Any]:
+def _verdict(
+    checks: dict[str, Any],
+    shots: dict[str, Any],
+    flows: dict[str, Any],
+    http_only: bool,
+) -> dict[str, Any]:
     health_ok = checks.get("api_health", {}).get("ok") is True
     index_ok = checks.get("index", {}).get("ok") is True
     base_pass = health_ok and index_ok
 
     shot_status = shots.get("status")
+    flow_status = flows.get("status")
     if not base_pass:
         return {
             "production_readiness": "NEEDS_WORK",
@@ -347,24 +514,34 @@ def _verdict(checks: dict[str, Any], shots: dict[str, Any], http_only: bool) -> 
             "reason": "HTTP evidence only; add Playwright for visual proof (see requirements-qa.txt)",
             "http_checks": "pass",
         }
-    if shot_status in ("ok", "partial") and not shots.get("errors"):
-        return {
-            "production_readiness": "EVIDENCE_OK",
-            "reason": "Health, index, and screenshot run completed without errors",
-        }
-    if shot_status == "partial":
+    if flow_status == "error":
         return {
             "production_readiness": "NEEDS_WORK",
-            "reason": "Partial screenshot failure",
+            "reason": "Playwright UI flows failed: " + str(flows.get("error", "error")),
         }
     if shot_status == "error":
         return {
             "production_readiness": "NEEDS_WORK",
             "reason": shots.get("error", "screenshot error"),
         }
+    if shot_status == "partial" and shots.get("errors"):
+        return {
+            "production_readiness": "NEEDS_WORK",
+            "reason": "Partial screenshot failure",
+        }
+    if shot_status in ("ok", "partial") and not shots.get("errors"):
+        reason = "Health, index, and screenshot run completed without errors"
+        if flow_status == "ok":
+            reason = "Health, index, screenshot run, and UI hash-route flows passed"
+        elif flow_status == "skipped":
+            reason = "Health, index, screenshots — UI flows skipped (playwright?)"
+        return {
+            "production_readiness": "EVIDENCE_OK",
+            "reason": reason,
+        }
     return {
         "production_readiness": "NEEDS_WORK",
-        "reason": "unknown screenshot state",
+        "reason": "unknown screenshot or flow state",
     }
 
 
@@ -401,16 +578,23 @@ def main() -> int:
         "api_health": _check_health(base),
         "index": _check_index(base),
     }
+    flows: dict[str, Any] = {"status": "skipped", "reason": "--http-only"}
     if args.http_only:
         shots: dict[str, Any] = {"status": "skipped", "reason": "--http-only"}
     else:
         shots = _screenshots_playwright(base, args.out_dir)
+        flows = _playwright_interaction_flows(base)
 
     match_smoke: dict[str, Any] | None = None
     if args.match_smoke:
         match_smoke = _check_match_smoke(base, checks["api_health"])
 
-    verdict = _verdict(checks, shots, args.http_only or shots.get("status") == "skipped")
+    verdict = _verdict(
+        checks,
+        shots,
+        flows,
+        args.http_only or shots.get("status") == "skipped",
+    )
     if args.match_smoke and match_smoke is not None:
         st = match_smoke.get("status")
         if args.match_smoke_strict and st != "ok":
@@ -435,6 +619,7 @@ def main() -> int:
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "checks": checks,
         "screenshots": shots,
+        "playwright_flows": flows,
         "verdict": verdict,
     }
     if match_smoke is not None:
@@ -456,6 +641,8 @@ def main() -> int:
     if shots.get("status") == "error" and not args.http_only:
         return 1
     if shots.get("status") == "partial" and shots.get("errors"):
+        return 1
+    if not args.http_only and flows.get("status") == "error":
         return 1
     if args.match_smoke and match_smoke is not None:
         st = match_smoke.get("status")

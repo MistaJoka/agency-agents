@@ -87,3 +87,10 @@ integrations/kimi/*/
 
 # Agent Matchmaker local QA (scripts/qa-reality-capture.sh)
 agent-matchmaker/qa-screenshots/
+
+# Multi-source registry (Phase 1+) — cloned upstream trees + generated DB
+data/imported_sources/*
+!data/imported_sources/.gitkeep
+data/registry.sqlite
+data/registry_export.json
+data/export_packs/

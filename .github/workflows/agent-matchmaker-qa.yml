@@ -1,0 +1,62 @@
+# Playwright + HTTP reality checks (hash routes, dedicated overlay, screenshots).
+name: Agent Matchmaker QA
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "agent-matchmaker/**"
+      - "scripts/build_agent_matchmaker.py"
+      - "scripts/qa-reality-capture.sh"
+      - "scripts/qa-test-matrix.sh"
+      - "data/sources.json"
+      - ".github/workflows/agent-matchmaker-qa.yml"
+  pull_request:
+    paths:
+      - "agent-matchmaker/**"
+      - "scripts/build_agent_matchmaker.py"
+      - "scripts/qa-reality-capture.sh"
+      - "scripts/qa-test-matrix.sh"
+      - "data/sources.json"
+      - ".github/workflows/agent-matchmaker-qa.yml"
+
+concurrency:
+  group: matchmaker-qa-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  reality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: |
+            agent-matchmaker/requirements-app.txt
+            agent-matchmaker/requirements-qa.txt
+
+      - name: Create venv and install dependencies
+        run: |
+          python3 -m venv .venv
+          .venv/bin/pip install -U pip
+          .venv/bin/pip install -r agent-matchmaker/requirements-app.txt
+          .venv/bin/pip install -r agent-matchmaker/requirements-qa.txt
+          .venv/bin/python3 -m playwright install chromium
+
+      - name: QA matrix (forward + reverse, no Gemini secret)
+        run: bash ./scripts/qa-test-matrix.sh
+        env:
+          PORT: "8765"
+          BASE_URL: "http://127.0.0.1:8765"
+          MATRIX_SKIP_GEMINI: "1"
+
+      - name: Upload evidence (json + screenshots)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: agent-matchmaker-qa-screenshots
+          path: agent-matchmaker/qa-screenshots/

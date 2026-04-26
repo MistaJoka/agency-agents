@@ -11,7 +11,7 @@ Source: `agent-matchmaker/webapp.py::Handler.do_POST`, `matchmaker_lib.run_match
 | Browser (frontend IIFE, `renderGemini`) | Issues POST, renders result |
 | `ThreadingHTTPServer` + `Handler` | Parses request, dispatches |
 | `matchmaker_lib.run_match_request` | Builds prompt payload, calls Gemini, merges |
-| `matchmaker_lib.call_gemini` | Configures `google.generativeai` SDK, invokes `gemini-2.5-flash` |
+| `matchmaker_lib.call_gemini` | Configures `google.genai` client (`google-genai` package), invokes `gemini-2.5-flash` |
 | Google Gemini API | LLM ranker |
 | `validate_and_merge` | Hallucination guard + shape enforcement |
 | `catalog.json` | Source-of-truth agent index |
@@ -175,7 +175,7 @@ UI_IDLE
 ## Assumptions
 | # | Assumption | Impact if wrong |
 |---|------------|-----------------|
-| A1 | `google.generativeai` SDK applies a sane default HTTP timeout | Slow/hung Gemini blocks a server thread; no client-side kill |
+| A1 | `google.genai` client (timeout behavior per Google SDK) | Slow/hung Gemini blocks a server thread; no client-side kill |
 | A2 | Client `Content-Length` is accurate | Under-read → invalid JSON; over-read → hang |
 | A3 | Gemini obeys `response_mime_type="application/json"` and `SYSTEM_INSTRUCTION` schema | Increased hallucination-guard warnings; possible `JSONDecodeError` |
 | A4 | `catalog.json` entries all carry unique `path` | Merge dedupe is the only defense against dupes in catalog itself |

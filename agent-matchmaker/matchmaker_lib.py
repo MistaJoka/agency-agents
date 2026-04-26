@@ -11,12 +11,16 @@ import re
 import subprocess
 import sys
 from functools import lru_cache
+import sqlite3
 from pathlib import Path
 
+# Prefer `google-genai` (Gemini API). Legacy `google-generativeai` is deprecated.
 try:
-    import google.generativeai as genai
+    from google import genai
+    from google.genai import types as genai_types
 except ImportError:  # pragma: no cover
     genai = None
+    genai_types = None
 
 try:
     from dotenv import load_dotenv
@@ -26,6 +30,7 @@ except ImportError:
 APP_DIR = Path(__file__).resolve().parent
 REPO_ROOT = APP_DIR.parent
 CATALOG_PATH = APP_DIR / "catalog.json"
+REGISTRY_DB_PATH = REPO_ROOT / "data" / "registry.sqlite"
 
 GITHUB_BASE_DEFAULT = "https://github.com/msitarzewski/agency-agents/blob/main/"
 
@@ -41,7 +46,7 @@ DESC_MAX = 700
 
 SYSTEM_INSTRUCTION = """You help users pick specialist AI agents from a fixed catalog (markdown agents in a git repo).
 You receive JSON with the user's goal, optional category filters, optional notes, and a list of agents.
-Each agent has: path (unique id), category, name, description, vibe, emoji.
+Each agent has: path (unique id), category, subcategory (folder under division / pack, or empty), name, description, vibe, emoji.
 
 Rules:
 - Recommend only agents that appear in the provided list. Use each agent's exact "path" string.
@@ -65,6 +70,31 @@ Respond with JSON only, no markdown fences. Schema:
     }
   ]
 }
+"""
+
+PLAN_SEQUENCE_INSTRUCTION = """You help users build an ordered sequence of specialist AI agents and skills for a goal.
+You receive JSON with the user's goal, optional context, a list of catalog agents (each has path, name, description), and a list of registry items (each has id, name, description, item_type, source_path). Registry items are often skills or imported agents not in the main catalog.
+
+Rules:
+- Order steps from first to run → last. Each step is one agent (catalog path) OR one registry item (registry id).
+- Use exact "path" strings for catalog agents and exact "id" strings for registry items — only from the provided lists.
+- Return 4–15 steps unless the goal is very narrow (then fewer is OK). Do not pad with weak fits.
+- Prefer a practical pipeline: research → design → build → verify when that fits the goal.
+- If the goal needs coordination across many roles, you may start with a short discovery step then specialists.
+
+Respond with JSON only, no markdown fences. Schema:
+{
+  "summary": "1–3 sentences explaining the overall sequence",
+  "steps": [
+    {
+      "ref_id": "either agent path or registry id",
+      "kind": "agent",
+      "why_next": "one sentence — what this step produces for the next"
+    }
+  ]
+}
+
+For each step, set "kind" to "agent" when using a catalog path, or "skill" when using a registry item id (including imported agents stored only in registry).
 """
 
 
@@ -179,6 +209,7 @@ def compact_agents(rows: list[dict]) -> list[dict]:
         out.append(
             {
                 "path": a["path"],
+                "source_id": a.get("source_id") or "local-agency-agents",
                 "category": a.get("category", ""),
                 "name": a.get("name", ""),
                 "description": desc,
@@ -212,33 +243,84 @@ def call_gemini(
     model_name: str,
     user_payload: dict,
     temperature: float,
+    *,
+    system_instruction: str | None = None,
 ) -> dict:
-    if genai is None:
-        raise RuntimeError("google-generativeai is not installed")
-    genai.configure(api_key=api_key)
-    model = genai.GenerativeModel(
-        model_name=model_name,
-        system_instruction=SYSTEM_INSTRUCTION,
-    )
+    if genai is None or genai_types is None:
+        raise RuntimeError("google-genai is not installed (pip install -r agent-matchmaker/requirements-app.txt)")
+    client = genai.Client(api_key=api_key)
     prompt = (
         "User request payload (JSON):\n"
         + json.dumps(user_payload, ensure_ascii=False)
         + "\n\nReturn JSON matching the schema in your instructions."
     )
-    resp = model.generate_content(
-        prompt,
-        generation_config=genai.types.GenerationConfig(
+    response = client.models.generate_content(
+        model=model_name,
+        contents=prompt,
+        config=genai_types.GenerateContentConfig(
+            system_instruction=system_instruction or SYSTEM_INSTRUCTION,
             temperature=temperature,
             response_mime_type="application/json",
         ),
-        request_options={"timeout": 30},
     )
-    if not resp.candidates:
-        raise RuntimeError("No response from model (blocked or empty)")
-    text = (resp.text or "").strip()
+    text = (getattr(response, "text", None) or "").strip()
     if not text:
-        raise RuntimeError("Empty model response")
+        raise RuntimeError("No response from model (blocked or empty)")
     return json.loads(text)
+
+
+def fetch_registry_metadata() -> list[dict]:
+    """Lightweight rows from registry.sqlite (no raw markdown). Empty list if DB missing."""
+    if not REGISTRY_DB_PATH.is_file():
+        return []
+    try:
+        conn = sqlite3.connect(str(REGISTRY_DB_PATH))
+    except OSError:
+        return []
+    try:
+        cur = conn.execute(
+            """
+            SELECT id, source_id, item_type, name, category, description, source_path
+            FROM registry_items
+            ORDER BY source_id, source_path
+            """
+        )
+        out: list[dict] = []
+        for row in cur.fetchall():
+            desc = row[5] or ""
+            if len(desc) > DESC_MAX:
+                desc = desc[: DESC_MAX - 1] + "…"
+            out.append(
+                {
+                    "id": row[0],
+                    "source_id": row[1] or "",
+                    "item_type": row[2] or "",
+                    "name": row[3] or "",
+                    "category": row[4] or "",
+                    "description": desc,
+                    "source_path": row[6] or "",
+                }
+            )
+        return out
+    except sqlite3.Error:
+        return []
+    finally:
+        conn.close()
+
+
+def compact_registry_for_plan(rows: list[dict]) -> list[dict]:
+    out = []
+    for r in rows:
+        out.append(
+            {
+                "id": r["id"],
+                "name": r.get("name", ""),
+                "description": r.get("description", ""),
+                "item_type": r.get("item_type", ""),
+                "source_path": r.get("source_path", ""),
+            }
+        )
+    return out
 
 
 def validate_and_merge(
@@ -284,6 +366,77 @@ def validate_and_merge(
     return parsed, warnings
 
 
+def validate_plan_sequence(
+    parsed: dict,
+    catalog_by_path: dict[str, dict],
+    registry_by_id: dict[str, dict],
+    *,
+    max_steps: int = 20,
+) -> tuple[dict, list[str]]:
+    warnings: list[str] = []
+    steps_in = parsed.get("steps") if isinstance(parsed, dict) else None
+    if not isinstance(steps_in, list):
+        warnings.append("Model returned no steps array.")
+        out = dict(parsed) if isinstance(parsed, dict) else {}
+        out["steps"] = []
+        return out, warnings
+
+    merged: list[dict] = []
+    seen: set[str] = set()
+    for s in steps_in:
+        if len(merged) >= max_steps:
+            warnings.append(f"Truncated plan at {max_steps} steps.")
+            break
+        if not isinstance(s, dict):
+            continue
+        ref = s.get("ref_id")
+        if not isinstance(ref, str):
+            ref = s.get("refId")  # type: ignore[assignment]
+        if not isinstance(ref, str) or not ref.strip():
+            continue
+        ref = ref.strip().lstrip("./")
+        if ref in seen:
+            continue
+
+        why = str(s.get("why_next", "")).strip()
+
+        if ref in catalog_by_path:
+            agent = catalog_by_path[ref]
+            merged.append(
+                {
+                    "ordinal": len(merged),
+                    "kind": "agent",
+                    "refId": ref,
+                    "titleSnapshot": agent.get("name", ref),
+                    "why_next": why,
+                }
+            )
+            seen.add(ref)
+            continue
+
+        if ref in registry_by_id:
+            row = registry_by_id[ref]
+            itype = str(row.get("item_type") or "").lower()
+            step_kind = "agent" if itype == "agent" else "skill"
+            merged.append(
+                {
+                    "ordinal": len(merged),
+                    "kind": step_kind,
+                    "refId": ref,
+                    "titleSnapshot": row.get("name") or ref,
+                    "why_next": why,
+                }
+            )
+            seen.add(ref)
+            continue
+
+        warnings.append(f"Ignored unknown ref_id from model: {ref}")
+
+    out = dict(parsed) if isinstance(parsed, dict) else {}
+    out["steps"] = merged
+    return out, warnings
+
+
 def _clamp_int(v: object, lo: int, hi: int) -> int:
     try:
         x = int(v)  # type: ignore[arg-type]
@@ -301,6 +454,7 @@ def run_match_request(
     model_name: str,
     temperature: float,
     github_base: str,
+    source_ids: list[str] | None = None,
 ) -> dict:
     """Run a full Gemini match; returns JSON-serializable result for the API."""
     catalog = list(load_catalog())
@@ -309,11 +463,19 @@ def run_match_request(
     pool = catalog
     if categories:
         sel = set(categories)
-        pool = [a for a in catalog if a.get("category") in sel]
+        pool = [a for a in pool if a.get("category") in sel]
+    if source_ids:
+        allow = {str(s).strip() for s in source_ids if isinstance(s, str) and s.strip()}
+        if allow:
+
+            def _sid(a: dict) -> str:
+                return (a.get("source_id") if isinstance(a.get("source_id"), str) else None) or "local-agency-agents"
+
+            pool = [a for a in pool if _sid(a) in allow]
     if not pool:
         return {
             "ok": False,
-            "error": "No agents in the selected divisions. Clear filters or pick other divisions.",
+            "error": "No agents in the current source and division filter. Widen filters or clear source scope.",
         }
 
     payload = {
@@ -345,4 +507,91 @@ def run_match_request(
         "matches": merged.get("matches") or [],
         "warnings": warns,
         "github_base": github_base.rstrip("/") + "/",
+    }
+
+
+REGISTRY_PLAN_CAP = 450
+
+
+def run_plan_sequence_request(
+    *,
+    goal: str,
+    categories: list[str] | None,
+    extra: str | None,
+    api_key: str,
+    model_name: str,
+    temperature: float,
+    source_ids: list[str] | None = None,
+    max_steps: int = 20,
+) -> dict:
+    """Gemini-ordered agent/skill sequence with hallucination guard on paths and registry ids."""
+    catalog = list(load_catalog())
+    by_path = {a["path"]: a for a in catalog if "path" in a}
+
+    pool = catalog
+    if categories:
+        sel = set(categories)
+        pool = [a for a in pool if a.get("category") in sel]
+    if source_ids:
+        allow = {str(s).strip() for s in source_ids if isinstance(s, str) and s.strip()}
+        if allow:
+
+            def _sid(a: dict) -> str:
+                return (a.get("source_id") if isinstance(a.get("source_id"), str) else None) or "local-agency-agents"
+
+            pool = [a for a in pool if _sid(a) in allow]
+    if not pool:
+        return {
+            "ok": False,
+            "error": "No agents in the current source and division filter. Widen filters or clear source scope.",
+        }
+
+    reg_rows = fetch_registry_metadata()
+    pre_warns: list[str] = []
+    if source_ids:
+        allow = {str(s).strip() for s in source_ids if isinstance(s, str) and s.strip()}
+        if allow:
+            reg_rows = [r for r in reg_rows if r.get("source_id") in allow]
+    if len(reg_rows) > REGISTRY_PLAN_CAP:
+        reg_rows = reg_rows[:REGISTRY_PLAN_CAP]
+        pre_warns.append(f"Registry listing truncated to {REGISTRY_PLAN_CAP} items for the model prompt.")
+
+    registry_by_id = {r["id"]: r for r in reg_rows if r.get("id")}
+
+    payload = {
+        "user_goal": goal.strip(),
+        "only_categories": categories if categories else None,
+        "extra_context": (extra or "").strip() or None,
+        "agents": compact_agents(pool),
+        "agents_in_prompt_count": len(pool),
+        "registry_items": compact_registry_for_plan(reg_rows),
+        "registry_in_prompt_count": len(reg_rows),
+    }
+
+    try:
+        ms = int(max_steps)
+    except (TypeError, ValueError):
+        ms = 20
+    ms = max(4, min(30, ms))
+
+    try:
+        parsed = call_gemini(
+            api_key.strip(),
+            model_name,
+            payload,
+            float(temperature),
+            system_instruction=PLAN_SEQUENCE_INSTRUCTION,
+        )
+    except json.JSONDecodeError as e:
+        return {"ok": False, "error": f"Model returned invalid JSON: {e}"}
+    except Exception as e:
+        return {"ok": False, "error": f"Request failed: {e}"}
+
+    merged, warns = validate_plan_sequence(parsed, by_path, registry_by_id, max_steps=ms)
+    all_warns = pre_warns + warns
+    return {
+        "ok": True,
+        "summary": merged.get("summary"),
+        "steps": merged.get("steps") or [],
+        "warnings": all_warns,
     }

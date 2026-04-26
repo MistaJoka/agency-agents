@@ -77,6 +77,10 @@ Found a problem? Let us know:
 - Include context about your use case
 - Suggest potential solutions if you have ideas
 
+### Agent Matchmaker (web UI and QA)
+
+The local matchmaker and `POST /api/match` use Python **3.10+** and the **`google-genai`** package (`from google import genai`). Set up a virtualenv and follow [`agent-matchmaker/README.md`](agent-matchmaker/README.md) for run commands, Playwright-based QA, and optional Gemini smoke in CI (repository secret `GEMINI_API_KEY` for the manual workflow).
+
 ---
 
 ## 🎨 Agent Design Guidelines
@@ -272,6 +276,10 @@ We love ambitious ideas — a [Discussion](https://github.com/msitarzewski/agenc
 3. **Add Examples**: Include at least 2-3 code/template examples
 4. **Define Metrics**: Include specific, measurable success criteria
 5. **Proofread**: Check for typos, formatting issues, clarity
+
+### ASLF QA memory (tooling, matchmaker, registry, exports)
+
+If your PR touches `scripts/`, `agent-matchmaker/`, `lib/`, `data/`, or `supabase-web/`, read [`docs/aslf/README.md`](docs/aslf/README.md) and use the **ASLF Checklist** in the PR template. ASLF is process-only: log evidence and guards—not a license to refactor unrelated code.
 
 ### Submitting Your PR
 

@@ -24,9 +24,11 @@ from urllib.parse import parse_qs, urlparse
 
 from matchmaker_lib import (
     ensure_catalog_exists,
+    fetch_registry_metadata,
     genai,
     load_dotenv_repo,
     run_match_request,
+    run_plan_sequence_request,
 )
 
 APP_DIR = Path(__file__).resolve().parent
@@ -135,8 +137,48 @@ class Handler(SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, directory=str(APP_DIR), **kwargs)
 
+    def handle(self) -> None:  # noqa: N802
+        try:
+            super().handle()
+        except (BrokenPipeError, ConnectionResetError, ConnectionAbortedError):
+            return
+
+    @staticmethod
+    def _is_quiet_static_get_path(path: str) -> bool:
+        if path in ("/", "/index.html", "/favicon.ico"):
+            return True
+        if any(
+            path.endswith(sfx)
+            for sfx in (".js", ".css", ".map", ".json", ".ico", ".png", ".svg", ".gif", ".webp", ".woff", ".woff2", ".ttf", ".eot", ".html")
+        ):
+            return True
+        if path in ("/catalog.json",) or path.startswith("/data/"):
+            return True
+        return False
+
+    def log_request(self, code: object = "-", size: object = "-") -> None:  # noqa: N802
+        """Omit 200/304 log lines for common static `GET` assets; keep API and errors visible."""
+        if isinstance(code, HTTPStatus):
+            cval: int = int(code.value)  # type: ignore[assignment]
+        else:
+            try:
+                cval = int(str(code).split()[0]) if not isinstance(code, int) else int(code)  # type: ignore[union-attr]
+            except (TypeError, ValueError, IndexError):
+                cval = 0
+        if cval not in (200, 204, 304):
+            super().log_request(code, size)
+            return
+        line = (getattr(self, "requestline", None) or "").strip()
+        parts = line.split()
+        if len(parts) < 2 or parts[0].upper() != "GET":
+            super().log_request(code, size)
+            return
+        if self._is_quiet_static_get_path(parts[1]):
+            return
+        super().log_request(code, size)
+
     def log_message(self, format: str, *args) -> None:  # noqa: A003
-        # Quieter default
+        # Quieter default (non–log_request messages)
         sys.stderr.write("%s - %s\n" % (self.address_string(), format % args))
 
     def _json(self, code: int, body: object) -> None:
@@ -157,8 +199,27 @@ class Handler(SimpleHTTPRequestHandler):
                     "ok": True,
                     "gemini_installed": genai is not None,
                     "server_gemini_key": _server_has_gemini_credentials(),
+                    "registry_items_count": len(fetch_registry_metadata()),
                 },
             )
+            return
+        if path == "/api/registry-items":
+            items = fetch_registry_metadata()
+            self._json(HTTPStatus.OK, {"ok": True, "items": items})
+            return
+        if path == "/data/sources.json":
+            src = REPO_ROOT / "data" / "sources.json"
+            if not src.is_file():
+                self.send_error(HTTPStatus.NOT_FOUND)
+                return
+            raw = src.read_text(encoding="utf-8")
+            data = raw.encode("utf-8")
+            self.send_response(HTTPStatus.OK)
+            self.send_header("Content-Type", "application/json; charset=utf-8")
+            self.send_header("Content-Length", str(len(data)))
+            self.send_header("Cache-Control", "no-store")
+            self.end_headers()
+            self.wfile.write(data)
             return
         if path == "/api/agent-source":
             rel = (parse_qs(urlparse(self.path).query).get("path") or [""])[0]
@@ -179,14 +240,17 @@ class Handler(SimpleHTTPRequestHandler):
 
     def do_POST(self) -> None:  # noqa: N802
         path = urlparse(self.path).path
-        if path != "/api/match":
+        if path not in ("/api/match", "/api/plan-sequence"):
             self.send_error(HTTPStatus.NOT_FOUND)
             return
 
         if genai is None:
             self._json(
                 HTTPStatus.SERVICE_UNAVAILABLE,
-                {"ok": False, "error": "Install: pip install -r agent-matchmaker/requirements-app.txt"},
+                {
+                    "ok": False,
+                    "error": "Install: pip install -r agent-matchmaker/requirements-app.txt (google-genai)",
+                },
             )
             return
 
@@ -244,6 +308,34 @@ class Handler(SimpleHTTPRequestHandler):
         except (TypeError, ValueError):
             temperature = 0.25
 
+        raw_source_ids = body.get("source_ids")
+        source_ids: list[str] | None = None
+        if raw_source_ids is not None and isinstance(raw_source_ids, list):
+            source_ids = [str(s).strip() for s in raw_source_ids if isinstance(s, str) and str(s).strip()]
+
+        if path == "/api/plan-sequence":
+            try:
+                max_steps = int(body.get("max_steps", 20))
+            except (TypeError, ValueError):
+                max_steps = 20
+            try:
+                result = run_plan_sequence_request(
+                    goal=goal,
+                    categories=categories,
+                    extra=extra,
+                    api_key=api_key,
+                    model_name=model,
+                    temperature=temperature,
+                    source_ids=source_ids,
+                    max_steps=max_steps,
+                )
+            except Exception as e:  # noqa: BLE001
+                self._json(HTTPStatus.INTERNAL_SERVER_ERROR, {"ok": False, "error": str(e)})
+                return
+            code = HTTPStatus.OK if result.get("ok") else HTTPStatus.BAD_REQUEST
+            self._json(code, result)
+            return
+
         gh_base = (body.get("github_base") or "").strip()
         if not gh_base:
             gh_base = os.environ.get("AGENCY_GITHUB_BASE", "").strip() or (
@@ -259,6 +351,7 @@ class Handler(SimpleHTTPRequestHandler):
                 model_name=model,
                 temperature=temperature,
                 github_base=gh_base,
+                source_ids=source_ids,
             )
         except Exception as e:  # noqa: BLE001
             self._json(HTTPStatus.INTERNAL_SERVER_ERROR, {"ok": False, "error": str(e)})
@@ -314,7 +407,7 @@ def main() -> None:
             f"{(REPO_ROOT / 'agent-matchmaker' / 'requirements-app.txt').as_posix()}"
         )
         print(
-            "Gemini Python SDK not importable in this process — the UI will report “no sdk”.\n"
+            "Google GenAI SDK (`google.genai`) not importable in this process — the UI will report “no sdk”.\n"
             f"  Interpreter: {sys.executable}\n"
             f"  Install: {pip_hint}\n"
             "  Or from repo root: ./scripts/run-agent-matchmaker.sh (uses .venv when present).\n"

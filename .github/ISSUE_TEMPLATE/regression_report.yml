@@ -1,0 +1,58 @@
+name: Regression Report
+description: Something that used to work broke after a change (tooling, matchmaker, registry, exports, or site).
+labels: ["regression"]
+body:
+  - type: input
+    id: last-known-good
+    attributes:
+      label: Last known good (commit, date, or release)
+      placeholder: e.g. abc1234 or 2026-04-20
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: Reproduction steps
+      placeholder: Commands, URLs, agent file paths, etc.
+    validations:
+      required: true
+
+  - type: input
+    id: area
+    attributes:
+      label: Affected area
+      placeholder: e.g. agent-matchmaker, scripts/build_agent_matchmaker.py, supabase-web
+    validations:
+      required: true
+
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence (logs, CI links — redact secrets)
+      placeholder: Link to run, paste key error lines, or note ASLF pattern ID if filed
+    validations:
+      required: false
+
+  - type: textarea
+    id: aslf
+    attributes:
+      label: ASLF follow-up
+      description: Optional — note if docs/aslf/REGRESSION_MEMORY or FAILURE_PATTERNS should be updated after fix.
+      placeholder: e.g. propose RC-00x guard test
+    validations:
+      required: false

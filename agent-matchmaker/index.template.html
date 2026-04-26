@@ -5,6 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#08090b" />
   <title>matchmaker · agency://console</title>
+  <script>
+    /* Avoid long flash of the shell title on cold load with #/agent/… */
+    if (/^#\/agent\//.test(String(location.hash || ""))) {
+      document.title = "… · agency";
+    }
+  </script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link
@@ -144,16 +150,43 @@
       width: 100%;
     }
 
+    .app-layout > .wrap {
+      flex: 1 1 auto;
+      min-width: 0;
+      width: 100%;
+    }
+
+    /* Fixed dock: aside + toggle overlay the main workspace (do not reduce .wrap width). */
+    .explore-dock {
+      position: fixed;
+      z-index: 60;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      display: flex;
+      flex-direction: row;
+      align-items: stretch;
+      pointer-events: none;
+    }
+    .explore-dock > * {
+      pointer-events: auto;
+    }
+
     .explore-sidebar {
       flex: 0 0 auto;
+      align-self: stretch;
+      position: relative;
+      z-index: 2; /* above full-screen .explore-backdrop in dock */
       width: 0;
       min-width: 0;
+      height: 100%;
       overflow: hidden;
       border-right: 1px solid transparent;
       background: var(--bg-1);
       transition:
         width var(--sidebar-dur) var(--sidebar-ease),
-        border-color var(--sidebar-dur) var(--sidebar-ease);
+        border-color var(--sidebar-dur) var(--sidebar-ease),
+        box-shadow var(--sidebar-dur) var(--sidebar-ease);
     }
 
     .explore-sidebar.is-open {
@@ -161,6 +194,7 @@
       border-right-color: var(--line-2);
       min-height: 0;
       align-self: stretch;
+      box-shadow: var(--shadow-2);
     }
 
     .explore-inner {
@@ -171,6 +205,142 @@
       display: flex;
       flex-direction: column;
       padding: 0.65rem 0.75rem 0.75rem;
+      gap: 0.35rem;
+    }
+
+    .explore-nav {
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+      max-height: min(40vh, 14rem);
+      overflow-y: auto;
+      padding-bottom: 0.1rem;
+    }
+    .explore-nav-section {
+      display: flex;
+      flex-direction: column;
+      gap: 0.12rem;
+    }
+    .explore-nav-label {
+      margin: 0.1rem 0 0;
+      font-family: var(--font-mono);
+      font-size: 0.58rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted-2);
+    }
+    .explore-nav-btn {
+      display: block;
+      width: 100%;
+      margin: 0;
+      padding: 0.3rem 0.38rem;
+      border-radius: var(--radius-xs);
+      border: 1px solid transparent;
+      background: transparent;
+      font: inherit;
+      font-size: 0.78rem;
+      line-height: 1.3;
+      color: var(--text-dim);
+      text-align: left;
+      cursor: pointer;
+      transition: color 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+    }
+    .explore-nav-btn:hover {
+      color: var(--text);
+      background: var(--surface);
+      border-color: var(--line);
+    }
+    .explore-nav-btn:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 1px;
+    }
+    .explore-nav-btn.is-active {
+      color: var(--accent);
+      background: var(--accent-wash);
+      border-color: var(--line-2);
+    }
+
+    .explore-panel-stack {
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+    .explore-panel {
+      flex: 1;
+      min-height: 0;
+      display: none;
+      flex-direction: column;
+    }
+    .explore-panel.is-visible {
+      display: flex;
+    }
+
+    .explore-panel-static {
+      padding: 0.2rem 0.1rem 0.4rem;
+      overflow-y: auto;
+    }
+    .explore-placeholder h3 {
+      margin: 0 0 0.35rem;
+      font-size: 0.72rem;
+      font-family: var(--font-mono);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--text);
+    }
+    .explore-placeholder p {
+      margin: 0;
+      font-size: 0.78rem;
+      line-height: 1.5;
+      color: var(--muted-2);
+    }
+    .sources-list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 0.2rem;
+    }
+    .sources-list li {
+      display: flex;
+      flex-direction: column;
+      gap: 0.1rem;
+      padding: 0.4rem 0.45rem;
+      border-radius: var(--radius-xs);
+      border: 1px solid var(--line);
+      background: var(--surface);
+    }
+    .sources-list li.is-disabled {
+      opacity: 0.55;
+    }
+    .sources-list li.is-clickable {
+      cursor: pointer;
+      transition: border-color 0.15s ease, background 0.15s ease;
+    }
+    .sources-list li.is-clickable:hover {
+      border-color: var(--line-2);
+      background: var(--surface-2);
+    }
+    .sources-list li.is-clickable:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+    .sources-name {
+      font-weight: 600;
+      font-size: 0.82rem;
+    }
+    .sources-id {
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      color: var(--muted);
+    }
+    .sources-meta {
+      font-size: 0.7rem;
+      color: var(--muted-2);
     }
 
     /* Drag-to-resize (width stored in localStorage; --sidebar-w on .canvas) */
@@ -215,25 +385,30 @@
 
     /* Thin scrollbars inside explore */
     .explore-cats,
+    .explore-subs,
     .explore-list-wrap {
       scrollbar-width: thin;
       scrollbar-color: rgba(255, 255, 255, 0.22) transparent;
     }
     .explore-cats::-webkit-scrollbar,
+    .explore-subs::-webkit-scrollbar,
     .explore-list-wrap::-webkit-scrollbar {
       width: 4px;
       height: 4px;
     }
     .explore-cats::-webkit-scrollbar-thumb,
+    .explore-subs::-webkit-scrollbar-thumb,
     .explore-list-wrap::-webkit-scrollbar-thumb {
       background: rgba(255, 255, 255, 0.22);
       border-radius: 999px;
     }
     .explore-cats::-webkit-scrollbar-thumb:hover,
+    .explore-subs::-webkit-scrollbar-thumb:hover,
     .explore-list-wrap::-webkit-scrollbar-thumb:hover {
       background: rgba(255, 255, 255, 0.35);
     }
     .explore-cats::-webkit-scrollbar-track,
+    .explore-subs::-webkit-scrollbar-track,
     .explore-list-wrap::-webkit-scrollbar-track {
       background: transparent;
     }
@@ -351,6 +526,9 @@
     .explore-cats-clip {
       min-height: 0;
       overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      gap: 0.45rem;
     }
 
     .explore-cats {
@@ -497,6 +675,62 @@
       outline-offset: 1px;
     }
 
+    .explore-subs-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 0.3rem;
+      padding-top: 0.1rem;
+      border-top: 1px solid var(--line-2);
+    }
+    .explore-subs-label {
+      margin: 0;
+      font-family: var(--font-mono);
+      font-size: 0.58rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted-2);
+    }
+    .explore-subs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.28rem;
+      max-height: 4.25rem;
+      overflow-y: auto;
+      padding-bottom: 0.1rem;
+    }
+    .explore-sub {
+      appearance: none;
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.04);
+      color: var(--muted);
+      font-family: var(--font-mono);
+      font-size: 0.58rem;
+      letter-spacing: 0.04em;
+      text-transform: none;
+      padding: 0.16rem 0.4rem;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+    }
+    .explore-sub.is-all:not(.is-active) {
+      border-color: rgba(255, 255, 255, 0.14);
+      background: rgba(255, 255, 255, 0.05);
+    }
+    .explore-sub:hover {
+      color: var(--text);
+      border-color: var(--line-2);
+    }
+    .explore-sub.is-active {
+      color: #0b0b0d;
+      background: var(--accent-2, var(--accent));
+      border-color: var(--accent-dim);
+    }
+    .explore-sub:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 1px;
+    }
+
     .explore-list-wrap {
       flex: 1;
       min-height: 0;
@@ -614,6 +848,287 @@
     .explore-row-links button.js-agent-source:hover {
       color: var(--accent);
       text-decoration: underline;
+    }
+
+    .explore-row-links button.js-add-team {
+      appearance: none;
+      background: none;
+      border: none;
+      padding: 0;
+      margin: 0;
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      font-weight: inherit;
+      color: var(--muted-2);
+      cursor: pointer;
+    }
+    .explore-row-links button.js-add-team:hover {
+      color: var(--accent);
+      text-decoration: underline;
+    }
+
+    /* ────────── team builder & workflows ────────── */
+    .team-builder-root {
+      display: flex;
+      flex-direction: column;
+      gap: 0.55rem;
+      flex: 1;
+      min-height: 0;
+      margin-top: 0.25rem;
+    }
+    .team-field {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+    .team-label {
+      font-family: var(--font-mono);
+      font-size: 0.58rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted-2);
+    }
+    .team-textarea {
+      width: 100%;
+      resize: vertical;
+      min-height: 2.6rem;
+      font-size: 0.78rem;
+    }
+    .team-toolbar,
+    .team-workflows-toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.35rem;
+      align-items: center;
+    }
+    .team-toolbar .primary {
+      font-size: 0.72rem;
+      padding: 0.28rem 0.55rem;
+    }
+    .team-toolbar .ghost,
+    .team-workflows-toolbar .ghost {
+      font-size: 0.72rem;
+      padding: 0.28rem 0.5rem;
+    }
+    .team-status {
+      margin: 0;
+      font-size: 0.72rem;
+      color: var(--muted);
+      min-height: 1.1em;
+    }
+    .team-split {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.5rem;
+      flex: 1;
+      min-height: 0;
+    }
+    @media (max-width: 720px) {
+      .team-split {
+        grid-template-columns: 1fr;
+      }
+    }
+    .team-col {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+      min-height: 0;
+      min-width: 0;
+    }
+    .team-search {
+      width: 100%;
+      font-size: 0.78rem;
+    }
+    .team-pick-list,
+    .team-steps-list {
+      flex: 1;
+      min-height: 8rem;
+      max-height: 42vh;
+      overflow: auto;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-xs);
+      background: rgba(0, 0, 0, 0.15);
+      padding: 0.35rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+    .team-pick-row,
+    .team-step-card {
+      border: 1px solid var(--line-2);
+      border-radius: 6px;
+      padding: 0.35rem 0.4rem;
+      background: var(--surface);
+      font-size: 0.74rem;
+    }
+    .team-pick-row {
+      cursor: pointer;
+      text-align: left;
+      width: 100%;
+      color: var(--text);
+      transition: border-color 0.12s ease, background 0.12s ease;
+    }
+    .team-pick-row:hover {
+      border-color: var(--accent-dim);
+      background: rgba(255, 255, 255, 0.03);
+    }
+    .team-pick-kind {
+      font-family: var(--font-mono);
+      font-size: 0.58rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--muted-2);
+    }
+    .team-pick-title {
+      font-weight: 600;
+      margin-top: 0.12rem;
+    }
+    .team-pick-ref {
+      font-family: var(--font-mono);
+      font-size: 0.62rem;
+      color: var(--muted-2);
+      word-break: break-all;
+      margin-top: 0.08rem;
+    }
+    .team-step-head {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.35rem;
+      margin-bottom: 0.25rem;
+    }
+    .team-step-badge {
+      font-family: var(--font-mono);
+      font-size: 0.55rem;
+      padding: 0.1rem 0.35rem;
+      border-radius: 4px;
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+    .team-step-badge.is-skill {
+      background: rgba(167, 139, 250, 0.2);
+      color: #e9ddff;
+    }
+    .team-step-title {
+      font-weight: 600;
+      flex: 1;
+      min-width: 0;
+    }
+    .team-step-actions {
+      display: flex;
+      gap: 0.2rem;
+      flex-wrap: wrap;
+    }
+    .team-step-actions button {
+      appearance: none;
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.04);
+      color: var(--muted);
+      font-family: var(--font-mono);
+      font-size: 0.58rem;
+      padding: 0.12rem 0.35rem;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .team-step-actions button:hover {
+      color: var(--text);
+      border-color: var(--line-2);
+    }
+    .team-step-ref {
+      font-family: var(--font-mono);
+      font-size: 0.62rem;
+      color: var(--muted-2);
+      word-break: break-all;
+      margin-bottom: 0.25rem;
+    }
+    .team-step-note {
+      width: 100%;
+      min-height: 2.2rem;
+      font-size: 0.72rem;
+      resize: vertical;
+    }
+    .wf-saved-list {
+      list-style: none;
+      margin: 0.5rem 0 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+      max-height: 50vh;
+      overflow: auto;
+    }
+    .wf-saved-li {
+      border: 1px solid var(--line);
+      border-radius: var(--radius-xs);
+      padding: 0.45rem 0.5rem;
+      background: rgba(0, 0, 0, 0.12);
+    }
+    .wf-saved-title {
+      font-weight: 600;
+      font-size: 0.8rem;
+    }
+    .wf-saved-meta {
+      font-family: var(--font-mono);
+      font-size: 0.62rem;
+      color: var(--muted-2);
+      margin-top: 0.15rem;
+    }
+    .wf-saved-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.3rem;
+      margin-top: 0.4rem;
+    }
+    .wf-saved-actions button {
+      font-size: 0.68rem;
+      padding: 0.22rem 0.45rem;
+    }
+
+    .masthead-route { display: block; }
+    .masthead-route[hidden] { display: none !important; }
+
+    /* Team Builder in main workspace (div.wrap) */
+    #workspace-route-team {
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      margin-top: 0.35rem;
+    }
+    #workspace-route-team[hidden] {
+      display: none !important;
+    }
+    .team-builder-main-bleed {
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      border: 1px solid var(--line-2);
+      border-radius: var(--radius);
+      background: var(--surface);
+      padding: 0.65rem 0.75rem 0.85rem;
+      overflow: hidden;
+    }
+    .team-builder-main-bleed .team-builder-root {
+      flex: 1;
+      min-height: 0;
+    }
+    .team-builder-main-bleed .team-pick-list,
+    .team-builder-main-bleed .team-steps-list {
+      max-height: min(52vh, 520px);
+    }
+
+    #workspace-route-matchmaker[hidden] {
+      display: none !important;
+    }
+    #workspace-route-matchmaker {
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
     }
 
     /* ────────── agent spotlight (full main-area brief from explore row) ────────── */
@@ -1113,56 +1628,59 @@
       color: var(--muted);
     }
 
-    .sidebar-toggle {
-      position: fixed;
-      z-index: 70;
-      left: 0;
-      top: clamp(3.25rem, 50%, calc(100% - 3.25rem));
-      translate: 0 -50%;
-      width: 15px;
-      height: 52px;
-      padding: 0;
+    .explore-dock .sidebar-toggle {
+      position: relative;
+      z-index: 2; /* above explore-backdrop in dock */
+      flex: 0 0 auto;
+      align-self: center;
+      box-sizing: border-box;
+      width: auto;
+      min-width: 2.25rem; /* 36px; touch media bumps to 44px */
+      height: 3rem; /* 48px; compact sliver */
+      min-height: 2.5rem;
+      max-height: 3.5rem;
+      padding: 0 0.2rem 0 0.15rem;
       margin: 0;
-      border: 1px solid var(--line-2);
+      border: 1px solid rgba(255, 255, 255, 0.07);
       border-left: none;
-      border-radius: 0 9px 9px 0;
-      background: linear-gradient(90deg, var(--surface), var(--elev));
-      color: var(--muted);
+      border-radius: 0 10px 10px 0;
+      background: transparent;
+      color: var(--muted-2);
       cursor: pointer;
-      box-shadow: var(--shadow-1);
-      transition:
-        left var(--sidebar-dur) var(--sidebar-ease),
-        color 0.18s ease,
-        border-color 0.18s ease,
-        background 0.18s ease;
+      box-shadow: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: color 0.18s ease, border-color 0.18s ease, background 0.18s ease;
+      -webkit-tap-highlight-color: transparent;
     }
 
-    .sidebar-toggle:hover {
+    .explore-dock .sidebar-toggle:hover {
       color: var(--accent);
-      border-color: var(--line-3);
+      border-color: var(--line-2);
+      background: rgba(255, 255, 255, 0.04);
     }
 
-    .sidebar-toggle:focus-visible {
+    .explore-dock .sidebar-toggle:focus-visible {
       outline: 2px solid var(--accent);
       outline-offset: 2px;
     }
 
-    .canvas.explore-open .sidebar-toggle {
-      left: calc(var(--sidebar-w) - 1px);
+    .explore-dock .sidebar-toggle:focus:not(:focus-visible) {
+      outline: none;
     }
 
     .sidebar-toggle-chev {
       display: block;
-      font-size: 0.85rem;
+      font-size: 0.9rem;
       line-height: 1;
-      margin-left: -1px;
     }
 
     .explore-backdrop {
-      display: none;
+      display: block;
       position: fixed;
       inset: 0;
-      z-index: 55;
+      z-index: 1; /* under aside + chevron, above main workspace */
       border: none;
       padding: 0;
       margin: 0;
@@ -1216,12 +1734,15 @@
         --sidebar-w: min(360px, calc(100% - 12px));
       }
 
-      .explore-sidebar {
-        position: fixed;
+      .explore-dock {
         top: 0;
-        bottom: 0;
         left: 0;
+        bottom: 0;
         z-index: 60;
+        align-items: stretch;
+      }
+
+      .explore-sidebar {
         width: var(--sidebar-w) !important;
         max-width: 100%;
         transform: translateX(-104%);
@@ -1241,17 +1762,13 @@
         pointer-events: none;
       }
 
+      .explore-dock .sidebar-toggle {
+        align-self: center;
+      }
+
       .explore-backdrop {
         display: block;
       }
-
-      .canvas.explore-open .sidebar-toggle {
-        left: calc(var(--sidebar-w) - 1px);
-      }
-    }
-
-    @media (min-width: 901px) {
-      .explore-backdrop { display: none !important; }
     }
 
     /* ────────── skip link ────────── */
@@ -1326,7 +1843,6 @@
       flex-shrink: 0;
       display: flex;
       align-items: center;
-      justify-content: space-between;
       gap: 0.5rem;
       min-height: 1.4rem;
       margin: 0.35rem 0.75rem 0.45rem;
@@ -1342,13 +1858,28 @@
       color: var(--muted-2);
       background: linear-gradient(180deg, var(--bg-1), #07080c);
     }
-    .app-rail-left, .app-rail-right {
+    .app-rail-viewport {
+      flex: 1;
       min-width: 0;
+      overflow-x: auto;
+      overflow-y: hidden;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
     }
-    .app-rail-right { text-align: right; }
+    .app-rail-viewport::-webkit-scrollbar {
+      display: none;
+    }
+    .app-rail-line {
+      margin: 0;
+      white-space: nowrap;
+      font: inherit;
+      line-height: inherit;
+      letter-spacing: 0.04em;
+      text-transform: none;
+      color: inherit;
+    }
     @media (max-width: 520px) {
-      .app-rail { flex-direction: column; align-items: flex-start; gap: 0.2rem; }
-      .app-rail-right { text-align: left; }
+      .app-rail { flex-wrap: wrap; }
     }
     .topbar-left { display: flex; align-items: center; gap: 0.65rem; min-width: 0; }
     .topbar-brand {
@@ -2335,6 +2866,18 @@
       pointer-events: auto;
     }
 
+    article.card .card-cta {
+      display: flex;
+      flex-direction: column;
+      gap: 0.3rem;
+      margin-top: 0.3rem;
+      align-items: stretch;
+    }
+    article.card .card-cta .ghost {
+      font-size: 0.7rem;
+      padding: 0.22rem 0.4rem;
+    }
+
     .card-followups {
       margin-top: 0.4rem;
       padding-top: 0.45rem;
@@ -2942,6 +3485,10 @@
     button.filters-open-btn:focus-visible .disclosure-summary {
       border-bottom-color: var(--line);
     }
+    button.filters-open-btn .disclosure-main {
+      text-transform: none;
+      letter-spacing: 0.06em;
+    }
     button.filters-open-btn .disclosure-summary {
       border-bottom: 1px solid transparent;
       transition: border-color 0.15s ease;
@@ -2986,15 +3533,13 @@
         padding: 0.35rem 0.55rem;
         touch-action: manipulation;
       }
-      .sidebar-toggle {
-        min-width: 22px;
-        min-height: 48px;
-        width: 18px;
-        height: 52px;
+      .explore-dock .sidebar-toggle {
+        min-width: 2.75rem; /* 44px touch */
+        min-height: 2.75rem;
+        max-height: 3.25rem;
+        height: auto;
+        padding: 0.35rem 0.45rem 0.35rem 0.3rem;
         touch-action: manipulation;
-      }
-      .canvas.explore-open .sidebar-toggle {
-        left: calc(var(--sidebar-w) - 1px);
       }
     }
 
@@ -3010,51 +3555,138 @@
 <body>
   <div class="canvas">
     <div class="app-layout">
+      <div class="explore-dock">
       <aside
         id="explore-sidebar"
         class="explore-sidebar"
-        aria-label="Explore agent catalog"
+        aria-label="App navigation and agent catalog"
         aria-hidden="true"
       >
         <div class="explore-inner">
-          <header class="explore-head">
-            <h2 class="explore-title">Explore</h2>
-            <p class="explore-sub">
-              Token index over embedded catalog fields — filter by name, path, category, description, and vibe. Click a row (not the links) to open a full brief in the main workspace.
-            </p>
-          </header>
-          <div class="explore-controls">
-            <label class="explore-search-label">
-              <span class="sr-only">Filter agents in catalog</span>
-              <input
-                type="search"
-                id="explore-search"
-                class="explore-search text-in"
-                placeholder="Filter…"
-                autocomplete="off"
-                spellcheck="false"
-              />
-            </label>
-            <div class="explore-cats-block" id="explore-cats-block">
-              <button
-                type="button"
-                id="explore-cats-toggle"
-                class="explore-cats-toggle"
-                aria-expanded="true"
-                aria-controls="explore-cats"
-              >
-                <span>Categories</span>
-                <span class="explore-cats-toggle-chev" aria-hidden="true">▼</span>
+          <nav class="explore-nav" id="explore-app-nav" aria-label="App sections">
+            <div class="explore-nav-section">
+              <p class="explore-nav-label">Main</p>
+              <button type="button" class="explore-nav-btn" data-nav="explore" id="nav-main-explore">Explore</button>
+              <button type="button" class="explore-nav-btn" data-nav="sources" id="nav-main-sources">Sources</button>
+              <button type="button" class="explore-nav-btn" data-nav="team-builder" id="nav-main-team">Team Builder</button>
+              <button type="button" class="explore-nav-btn" data-nav="workflows" id="nav-main-workflows">Workflows</button>
+              <button type="button" class="explore-nav-btn" data-nav="exports" id="nav-main-exports">Exports</button>
+            </div>
+            <div class="explore-nav-section">
+              <p class="explore-nav-label">Library</p>
+              <button type="button" class="explore-nav-btn explore-nav-lib" data-lib-filter="local-agency-agents">
+                Agency Agents
               </button>
-              <div class="explore-cats-surface">
-                <div class="explore-cats-clip">
-                  <div id="explore-cats" class="explore-cats" role="tablist" aria-label="Category index"></div>
+              <button type="button" class="explore-nav-btn explore-nav-lib" data-lib-filter="claude-skills">Claude Skills</button>
+              <button type="button" class="explore-nav-btn explore-nav-lib" data-lib-filter="everything-claude-code">
+                Everything Claude Code
+              </button>
+              <button type="button" class="explore-nav-btn explore-nav-lib" data-lib-filter="awesome-claude-code-subagents,awesome-codex-subagents">
+                Awesome Subagents
+              </button>
+              <button type="button" class="explore-nav-btn explore-nav-lib" data-lib-filter="custom-agents">Custom Agents</button>
+            </div>
+            <div class="explore-nav-section">
+              <p class="explore-nav-label">Tools</p>
+              <button type="button" class="explore-nav-btn" data-nav="import-sync" id="nav-tool-import">Import / Sync</button>
+              <button type="button" class="explore-nav-btn" data-nav="registry-health" id="nav-tool-health">Registry Health</button>
+              <button type="button" class="explore-nav-btn" data-nav="settings" id="nav-tool-settings">Settings</button>
+            </div>
+          </nav>
+          <div class="explore-panel-stack" id="explore-panel-stack">
+            <div class="explore-panel is-visible" data-panel="explore" id="explore-panel-explore">
+              <header class="explore-head">
+                <h2 class="explore-title">Explore</h2>
+                <p class="explore-sub">
+                  Token index — scoped to enabled sources (Library narrows to one pack). Filter by name, path, category,
+                  subgenre (first folder under a division or import), description, and vibe. Click a row to open a brief in
+                  the main workspace.
+                </p>
+              </header>
+              <div class="explore-controls">
+                <label class="explore-search-label">
+                  <span class="sr-only">Filter agents in catalog</span>
+                  <input
+                    type="search"
+                    id="explore-search"
+                    class="explore-search text-in"
+                    placeholder="Filter…"
+                    autocomplete="off"
+                    spellcheck="false"
+                  />
+                </label>
+                <div class="explore-cats-block" id="explore-cats-block">
+                  <button
+                    type="button"
+                    id="explore-cats-toggle"
+                    class="explore-cats-toggle"
+                    aria-expanded="true"
+                    aria-controls="explore-cats"
+                  >
+                    <span>Categories</span>
+                    <span class="explore-cats-toggle-chev" aria-hidden="true">▼</span>
+                  </button>
+                  <div class="explore-cats-surface">
+                    <div class="explore-cats-clip">
+                      <div id="explore-cats" class="explore-cats" role="tablist" aria-label="Category index"></div>
+                      <div id="explore-subs-wrap" class="explore-subs-wrap" hidden>
+                        <div class="explore-subs-label">Subgenres</div>
+                        <div id="explore-subs" class="explore-subs" role="tablist" aria-label="Subgenre index"></div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
+              <div class="explore-list-wrap" id="explore-list-wrap">
+                <div id="explore-list" class="explore-list"></div>
+              </div>
             </div>
-          </div>
-          <div class="explore-list-wrap" id="explore-list-wrap">
-            <div id="explore-list" class="explore-list"></div>
+            <div class="explore-panel explore-panel-static" data-panel="sources" id="explore-panel-sources" hidden>
+              <header class="explore-head">
+                <h2 class="explore-title">Sources</h2>
+                <p class="explore-sub">Configured in <code>data/sources.json</code> — sync not required to browse config.</p>
+              </header>
+              <ul class="sources-list" id="sources-list"></ul>
+            </div>
+            <div class="explore-panel explore-panel-static" data-panel="team-builder" id="explore-panel-team" hidden>
+              <header class="explore-head">
+                <h2 class="explore-title">Team Builder</h2>
+                <p class="explore-sub">
+                  Lives in the <strong>main workspace</strong> (center). Use catalog rows <strong>team</strong> or this nav to open it. Collapse sidebar for more room.
+                </p>
+              </header>
+            </div>
+            <div class="explore-panel explore-panel-static" data-panel="workflows" id="explore-panel-wf" hidden>
+              <header class="explore-head">
+                <h2 class="explore-title">Workflows</h2>
+                <p class="explore-sub">Saved sequences in this browser (<code>localStorage</code>). Export/import JSON to back up or share.</p>
+              </header>
+              <div class="team-workflows-toolbar">
+                <button type="button" class="ghost" id="wf-btn-refresh">Refresh</button>
+                <input type="file" id="wf-import-file" accept="application/json,.json" hidden />
+                <button type="button" class="ghost" id="wf-btn-import">Import JSON</button>
+              </div>
+              <ul id="wf-saved-list" class="wf-saved-list"></ul>
+            </div>
+            <div class="explore-panel explore-panel-static explore-placeholder" data-panel="exports" id="explore-panel-exp" hidden>
+              <h3>Exports</h3>
+              <p>Placeholder — export shortlists and briefs. Coming later.</p>
+            </div>
+            <div class="explore-panel explore-panel-static explore-placeholder" data-panel="import-sync" id="explore-panel-imp" hidden>
+              <h3>Import / Sync</h3>
+              <p>Placeholder — run <code>scripts/sync_sources.py</code> from the repo. Registry wiring TBD.</p>
+            </div>
+            <div class="explore-panel explore-panel-static explore-placeholder" data-panel="registry-health" id="explore-panel-reg" hidden>
+              <h3>Registry Health</h3>
+              <p>Placeholder — validate imported packs and skills against the local registry. Coming later.</p>
+            </div>
+            <div class="explore-panel explore-panel-static explore-placeholder" data-panel="settings" id="explore-panel-nav-settings" hidden>
+              <h3>Settings</h3>
+              <p>Opens the runtime panel (ranker, keys, catalog hints). Use the button below or the top bar.</p>
+              <p style="margin-top:0.5rem">
+                <button type="button" class="primary" id="nav-settings-open-runtime">Open settings</button>
+              </p>
+            </div>
           </div>
           <div
             class="explore-resize"
@@ -3067,6 +3699,7 @@
           ></div>
         </div>
       </aside>
+      <div id="explore-backdrop" class="explore-backdrop" hidden aria-hidden="true"></div>
       <button
         type="button"
         id="sidebar-toggle"
@@ -3078,7 +3711,7 @@
       >
         <span class="sidebar-toggle-chev" aria-hidden="true">›</span>
       </button>
-      <div id="explore-backdrop" class="explore-backdrop" hidden aria-hidden="true"></div>
+      </div>
     <div class="wrap">
       <a class="skip-link" href="#main-content">Skip to main content</a>
 
@@ -3107,11 +3740,20 @@
 
       <main id="main-content" class="app-window-body">
         <header class="masthead" id="masthead">
-          <p class="kicker">the agency</p>
-          <h1>Define your outcome.<span class="cursor" aria-hidden="true"></span></h1>
-          <p class="lead">
-            Say what you want shipped. Gemini scans this repo's agents, picks who fits, says why. No Gemini? Simple local matcher still runs.
-          </p>
+          <div class="masthead-route" data-masthead-route="match">
+            <p class="kicker">the agency</p>
+            <h1>Define your outcome.<span class="cursor" aria-hidden="true"></span></h1>
+            <p class="lead">
+              Say what you want shipped. Gemini scans this repo's agents, picks who fits, says why. No Gemini? Simple local matcher still runs.
+            </p>
+          </div>
+          <div class="masthead-route" data-masthead-route="team" hidden>
+            <p class="kicker">team builder</p>
+            <h1>Sequence agents &amp; skills.<span class="cursor" aria-hidden="true"></span></h1>
+            <p class="lead">
+              Order specialists and registry skills, add handoff notes, save workflows. Gemini can suggest a run order when the ranker is on. Pick from the list or use <strong>Suggest order</strong>.
+            </p>
+          </div>
         </header>
 
         <section id="agent-spotlight" class="agent-spotlight" aria-hidden="true" aria-labelledby="spotlight-title">
@@ -3124,10 +3766,11 @@
           <div class="agent-spotlight-scroll" id="spotlight-body"></div>
         </section>
 
+        <div id="workspace-route-matchmaker">
         <div class="bento-workspace" id="main-workspace">
           <div class="bento-left-scroll">
             <section class="panel bento-tile-goal" aria-labelledby="lbl-goal">
-              <h2 id="lbl-goal">Goal</h2>
+              <h2 id="lbl-goal">Input · Goal</h2>
               <div class="panel-body">
                 <div class="prompt-shell">
                   <textarea
@@ -3143,7 +3786,7 @@
                     <button type="button" class="ghost" id="btn-clear">clear</button>
                   </div>
                   <p class="action-hint">
-                    <kbd>⌘</kbd>/<kbd>Ctrl</kbd> + <kbd>Enter</kbd> executes from the input
+                    <kbd>⌘</kbd>/<kbd>Ctrl</kbd> + <kbd>Enter</kbd>
                   </p>
                 </div>
               </div>
@@ -3161,7 +3804,7 @@
                 <span class="disclosure-summary">
                   <span class="disclosure-main">
                     <span class="disclosure-chevron" aria-hidden="true"></span>
-                    <span class="disclosure-title">filters · shortlist</span>
+                    <span class="disclosure-title">Filters</span>
                   </span>
                   <span id="filter-badge" class="pill-count" hidden>0</span>
                 </span>
@@ -3172,7 +3815,7 @@
           <div class="bento-right-scroll">
             <div class="results-column bento-tile-results">
               <section class="panel panel-results" id="out-section" aria-labelledby="lbl-matches">
-                <h2 id="lbl-matches">Agent</h2>
+                <h2 id="lbl-matches">Output · Agent</h2>
                 <div class="panel-body">
                   <div id="orchestrator-callout" class="callout" hidden></div>
                   <div id="gemini-summary" class="callout gemini-summary" hidden></div>
@@ -3183,6 +3826,51 @@
             </div>
           </div>
         </div>
+        </div>
+
+        <section id="workspace-route-team" class="workspace-route-team" aria-label="Team builder workspace" hidden>
+          <div class="team-builder-main-bleed">
+            <div class="team-builder-root">
+              <label class="team-field">
+                <span class="team-label">Goal (for Gemini suggest)</span>
+                <textarea
+                  id="team-goal"
+                  class="text-in team-textarea"
+                  rows="2"
+                  placeholder="What you are trying to ship…"
+                  autocomplete="off"
+                ></textarea>
+              </label>
+              <div class="team-toolbar">
+                <button type="button" class="ghost" id="team-btn-suggest">Suggest order (Gemini)</button>
+                <button type="button" class="ghost" id="team-btn-clear">Clear</button>
+                <button type="button" class="primary" id="team-btn-save">Save workflow</button>
+                <button type="button" class="ghost" id="team-btn-export">Export draft</button>
+                <input type="file" id="team-import-file" accept="application/json,.json" hidden />
+                <button type="button" class="ghost" id="team-btn-import">Import</button>
+              </div>
+              <p class="team-status" id="team-status" aria-live="polite"></p>
+              <div class="team-split">
+                <div class="team-col">
+                  <span class="team-label">Add from catalog / registry</span>
+                  <input
+                    type="search"
+                    id="team-pick-search"
+                    class="text-in team-search"
+                    placeholder="Filter…"
+                    autocomplete="off"
+                    spellcheck="false"
+                  />
+                  <div id="team-pick-list" class="team-pick-list"></div>
+                </div>
+                <div class="team-col">
+                  <span class="team-label">Sequence</span>
+                  <div id="team-steps-list" class="team-steps-list"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
 
         <div class="filters-backdrop" id="filters-backdrop" aria-hidden="true"></div>
         <div
@@ -3295,9 +3983,10 @@
         </div>
       </main>
 
-      <footer class="app-rail" role="contentinfo" aria-label="Catalog and build">
-        <span class="app-rail-left" id="app-rail-catalog"></span>
-        <span class="app-rail-right" id="app-rail-hint"></span>
+      <footer class="app-rail" id="app-rail" role="contentinfo">
+        <div class="app-rail-viewport" id="app-rail-viewport">
+          <p class="app-rail-line" id="app-rail-line"></p>
+        </div>
       </footer>
       </div>
     </div>
@@ -3307,6 +3996,8 @@
   <section
     id="agent-dedicated"
     class="agent-dedicated"
+    role="dialog"
+    aria-modal="true"
     aria-hidden="true"
     hidden
     aria-labelledby="agent-dedicated-title"
@@ -3347,6 +4038,7 @@
 
   <script>
     window.__agentCatalogB64 = "__AGENT_CATALOG_B64__";
+    window.__sourcesJsonB64 = "__SOURCES_JSON_B64__";
   </script>
   <script>
 (async function () {
@@ -3357,6 +4049,31 @@
   function resolveApi(absolutePath) {
     const p = (absolutePath || "").replace(/^\//, "");
     return new URL(p, window.location.href).href;
+  }
+
+  async function loadSourcesConfig() {
+    if (!isFile && /^https?:$/i.test(window.location.protocol)) {
+      try {
+        const u = resolveApi("/data/sources.json");
+        const r = await fetch(u, { cache: "default" });
+        if (r.ok) {
+          const d = await r.json();
+          if (d && Array.isArray(d.sources)) return d;
+        }
+      } catch (_) {
+        /* fall through to embedded */
+      }
+    }
+    const b64 = window.__sourcesJsonB64;
+    if (typeof b64 === "string" && b64.length) {
+      try {
+        const d = JSON.parse(atob(b64));
+        if (d && Array.isArray(d.sources)) return d;
+      } catch {
+        return { sources: [] };
+      }
+    }
+    return { sources: [] };
   }
 
   async function loadCatalog() {
@@ -3382,21 +4099,85 @@
   }
 
   const CATALOG = await loadCatalog();
-  (function initAppRail() {
-    const elCat = document.getElementById("app-rail-catalog");
-    const elHint = document.getElementById("app-rail-hint");
-    const n = Array.isArray(CATALOG) ? CATALOG.length : 0;
-    if (elCat) {
-      elCat.textContent = n
-        ? `catalog · ${n} agents · embedded offline index`
-        : "catalog · (empty) — scripts/build_agent_matchmaker.py";
+  const sourcesConfig = await loadSourcesConfig();
+  let librarySourceFilter = null;
+  let navSection = "explore";
+  /** Center panel: matchmaker bento vs team builder (sidebar nav switches). */
+  let mainWorkspaceMode = "match";
+
+  function setMainWorkspaceMode(mode) {
+    const next = mode === "team" ? "team" : "match";
+    mainWorkspaceMode = next;
+    const rm = document.getElementById("workspace-route-matchmaker");
+    const rt = document.getElementById("workspace-route-team");
+    const mhMatch = document.querySelector('#masthead [data-masthead-route="match"]');
+    const mhTeam = document.querySelector('#masthead [data-masthead-route="team"]');
+    if (next === "team") {
+      closeAgentSpotlight();
+      closeAgentDedicatedPage();
+      if (rm) {
+        rm.hidden = true;
+        rm.setAttribute("hidden", "");
+      }
+      if (rt) {
+        rt.hidden = false;
+        rt.removeAttribute("hidden");
+      }
+      if (mhMatch) {
+        mhMatch.hidden = true;
+        mhMatch.setAttribute("hidden", "");
+      }
+      if (mhTeam) {
+        mhTeam.hidden = false;
+        mhTeam.removeAttribute("hidden");
+      }
+    } else {
+      if (rt) {
+        rt.hidden = true;
+        rt.setAttribute("hidden", "");
+      }
+      if (rm) {
+        rm.hidden = false;
+        rm.removeAttribute("hidden");
+      }
+      if (mhTeam) {
+        mhTeam.hidden = true;
+        mhTeam.setAttribute("hidden", "");
+      }
+      if (mhMatch) {
+        mhMatch.hidden = false;
+        mhMatch.removeAttribute("hidden");
+      }
     }
-    if (elHint) {
-      elHint.textContent = isFile
-        ? "file:// — http webapp for gemini + live catalog"
-        : "served: catalog.json · regen after agent edits";
+    scheduleAppRail();
+  }
+
+  function getEnabledSourceIds() {
+    const srcs = (sourcesConfig && sourcesConfig.sources) || [];
+    const e = new Set();
+    for (const s of srcs) {
+      if (s && s.id && s.enabled) e.add(s.id);
     }
-  })();
+    if (e.size === 0) e.add("local-agency-agents");
+    return e;
+  }
+
+  function getActiveSourceFilterIds() {
+    if (librarySourceFilter == null) {
+      return Array.from(getEnabledSourceIds());
+    }
+    if (Array.isArray(librarySourceFilter)) return librarySourceFilter.slice();
+    return [librarySourceFilter];
+  }
+
+  function passesSourceFilter(agent) {
+    const sid = (agent && agent.source_id) || "local-agency-agents";
+    return getActiveSourceFilterIds().indexOf(sid) !== -1;
+  }
+
+  function getSourceFilteredCatalog() {
+    return CATALOG.filter(passesSourceFilter);
+  }
 
   const DIVISION_LABELS = {
     academic: "academic & research",
@@ -3414,6 +4195,10 @@
     strategy: "strategy & planning",
     support: "support & operations",
     testing: "testing & qa",
+    "claude-skills": "claude skills (import)",
+    "everything-claude-code": "everything claude code (import)",
+    "awesome-claude-code-subagents": "awesome claude subagents (import)",
+    "awesome-codex-subagents": "awesome codex subagents (import)",
   };
   const FOCUS_TAGS = [
     { id: "china", label: "china / apac growth", keys: ["china", "wechat", "weibo", "douyin", "xiaohongshu", "baidu", "kuaishou", "zhihu", "bilibili", "cross-border", "apac", "mandarin"] },
@@ -3449,6 +4234,107 @@
   const outSection = document.getElementById("out-section");
   const filterBadge = document.getElementById("filter-badge");
   const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const APP_RAIL_NAV = {
+    explore: "explore",
+    sources: "sources",
+    "team-builder": "team",
+    workflows: "flows",
+    exports: "export",
+    "import-sync": "import",
+    "registry-health": "health",
+    settings: "settings",
+  };
+  let appRailRaf = 0;
+
+  function scheduleAppRail() {
+    if (appRailRaf) cancelAnimationFrame(appRailRaf);
+    appRailRaf = requestAnimationFrame(() => {
+      appRailRaf = 0;
+      refreshAppRail();
+    });
+  }
+
+  function appRailStatusShort(s, maxLen) {
+    const t = (s && String(s)) || "—";
+    const one = t.replace(/\s+/g, " ").trim();
+    if (one.length <= maxLen) return one;
+    return one.slice(0, maxLen - 1) + "…";
+  }
+
+  function refreshAppRail() {
+    const viewport = document.getElementById("app-rail-viewport");
+    const lineEl = document.getElementById("app-rail-line");
+    const foot = document.getElementById("app-rail");
+    if (!viewport || !lineEl) return;
+
+    const total = Array.isArray(CATALOG) ? CATALOG.length : 0;
+    const inScope = getSourceFilteredCatalog().length;
+    const nPack = getEnabledSourceIds().size;
+    let scopeView;
+    if (librarySourceFilter == null) {
+      scopeView = `sources: ${nPack} enabled`;
+    } else if (Array.isArray(librarySourceFilter)) {
+      scopeView =
+        "view: " +
+        librarySourceFilter.map((id) => (id.length > 12 ? id.slice(0, 11) + "…" : id)).join(" + ");
+    } else {
+      scopeView = `view: ${librarySourceFilter}`;
+    }
+    const dataOrigin = isFile ? "app: file (local) · heuristic match only" : "app: http · data: catalog.json";
+    const navL = APP_RAIL_NAV[navSection] || navSection || "—";
+    const sideEl = document.getElementById("explore-sidebar");
+    const sideOpen = !!(sideEl && sideEl.classList.contains("is-open"));
+    const rl = document.getElementById("runtime-launcher");
+    const rlab = rl?.querySelector(".topbar-runtime-label");
+    const rankLbl = (rlab && rlab.textContent) ? rlab.textContent.trim() : "—";
+    let shortlistN = 0;
+    try {
+      if (filterBadge && !filterBadge.hidden) shortlistN = parseInt(String(filterBadge.textContent), 10) || 0;
+    } catch (_) {
+      /* ignore */
+    }
+    const catPart =
+      inScope === total
+        ? `catalog: ${total} agents (all in view)`
+        : `catalog: ${total} agents · in view: ${inScope}`;
+    const parts = [
+      catPart,
+      scopeView,
+      dataOrigin,
+      `main: ${mainWorkspaceMode === "team" ? "team builder" : "matchmaker"}`,
+      `left nav: ${navL}`,
+      `explore sidebar: ${sideOpen ? "open" : "closed"}`,
+      `run match: ${appRailStatusShort(rankLbl, 24)}`,
+    ];
+    if (shortlistN > 0) parts.push(`shortlist filters: ${shortlistN} on`);
+    const line = parts.join(" · ");
+    lineEl.textContent = line;
+
+    let scopeLong;
+    if (librarySourceFilter == null) {
+      scopeLong = `scope: all enabled packs (${nPack})`;
+    } else if (Array.isArray(librarySourceFilter)) {
+      scopeLong = `filter: ${librarySourceFilter.join(" + ")}`;
+    } else {
+      scopeLong = `filter: ${librarySourceFilter}`;
+    }
+    const long = [
+      `catalog ${total} total`,
+      `${inScope} in current scope`,
+      scopeLong,
+      isFile ? "file:// offline" : "http · catalog.json",
+      `main workspace ${mainWorkspaceMode === "team" ? "team builder" : "matchmaker"}`,
+      `nav ${navL}`,
+      `sidebar ${sideOpen ? "open" : "shut"}`,
+      `ranker ${rankLbl}`,
+    ];
+    if (shortlistN > 0) long.push(`divisions / focus tags: ${shortlistN}`);
+    const longLine = long.join(" · ");
+    foot?.setAttribute("title", longLine);
+    lineEl.setAttribute("title", longLine);
+    viewport.setAttribute("aria-label", "Status: " + longLine);
+  }
+
   const btnMatchEl = document.getElementById("btn-match");
   const apiKeyEl = document.getElementById("api-key");
   const rememberKeyEl = document.getElementById("remember-api-key");
@@ -3620,8 +4506,9 @@
 
   /** Top bar chip: connection + whether Smart match (Gemini) will actually run. */
   function refreshRuntimeLauncherVisual() {
-    if (!runtimeLauncher) return;
-    const dotEl = runtimeLauncher.querySelector(".topbar-runtime-dot");
+    try {
+      if (!runtimeLauncher) return;
+      const dotEl = runtimeLauncher.querySelector(".topbar-runtime-dot");
     const labelEl = runtimeLauncher.querySelector(".topbar-runtime-label");
     const state = runtimeLauncher.dataset.state || "pending";
 
@@ -3723,6 +4610,9 @@
         "Local heuristic ranker — smart match off or blocked — open settings",
         whyLocal
       );
+    }
+    } finally {
+      scheduleAppRail();
     }
   }
 
@@ -3976,6 +4866,8 @@
   const exploreBackdropEl = document.getElementById("explore-backdrop");
   const exploreSearchEl = document.getElementById("explore-search");
   const exploreCatsEl = document.getElementById("explore-cats");
+  const exploreSubsWrapEl = document.getElementById("explore-subs-wrap");
+  const exploreSubsEl = document.getElementById("explore-subs");
   const exploreCatsBlockEl = document.getElementById("explore-cats-block");
   const exploreCatsToggleEl = document.getElementById("explore-cats-toggle");
   const exploreListEl = document.getElementById("explore-list");
@@ -3985,6 +4877,876 @@
   const LS_EXPLORE_OPEN = "agency-agents:matchmaker:explore-open";
   const LS_EXPLORE_WIDTH = "agency-agents:matchmaker:explore-width-px";
   const LS_EXPLORE_CATS_COLLAPSED = "agency-agents:matchmaker:explore-cats-collapsed";
+
+  const NAV_TO_PANEL = {
+    explore: "explore-panel-explore",
+    sources: "explore-panel-sources",
+    "team-builder": "explore-panel-team",
+    workflows: "explore-panel-wf",
+    exports: "explore-panel-exp",
+    "import-sync": "explore-panel-imp",
+    "registry-health": "explore-panel-reg",
+    settings: "explore-panel-nav-settings",
+  };
+
+  function setSidebarPanelByNav(nav) {
+    const id = NAV_TO_PANEL[nav] || "explore-panel-explore";
+    const stack = document.getElementById("explore-panel-stack");
+    if (!stack) return;
+    stack.querySelectorAll(".explore-panel").forEach((p) => {
+      const on = p.id === id;
+      p.classList.toggle("is-visible", on);
+      p.hidden = !on;
+    });
+  }
+
+  /* ─── Team Builder & saved workflows (localStorage + optional /api/registry-items, /api/plan-sequence) ─── */
+  const LS_WORKFLOWS = "agency-agents:workflows:v1";
+  const LS_TEAM_DRAFT = "agency-agents:team-draft:v1";
+  const WORKFLOW_SCHEMA_VERSION = 1;
+
+  let teamRegistryItems = [];
+  let teamDraft = {
+    goal: "",
+    steps: [],
+    editingId: null,
+    editingTitle: "",
+  };
+
+  function genStepId() {
+    if (typeof crypto !== "undefined" && crypto.randomUUID) return crypto.randomUUID();
+    return "st-" + String(Date.now()) + "-" + String(Math.random()).slice(2, 9);
+  }
+
+  function genWorkflowId() {
+    if (typeof crypto !== "undefined" && crypto.randomUUID) return crypto.randomUUID();
+    return "wf-" + String(Date.now()) + "-" + String(Math.random()).slice(2, 9);
+  }
+
+  function setTeamStatus(msg) {
+    const el = document.getElementById("team-status");
+    if (el) el.textContent = msg || "";
+  }
+
+  function normalizeStoredStep(s) {
+    if (!s || typeof s !== "object") return null;
+    const kind = s.kind === "skill" ? "skill" : "agent";
+    const refId = String(s.refId || s.ref_id || "").trim();
+    if (!refId) return null;
+    return {
+      stepId: typeof s.stepId === "string" && s.stepId ? s.stepId : genStepId(),
+      ordinal: typeof s.ordinal === "number" ? s.ordinal : 0,
+      kind,
+      refId,
+      titleSnapshot: String(s.titleSnapshot || s.title || refId).trim() || refId,
+      note: typeof s.note === "string" ? s.note : typeof s.why_next === "string" ? s.why_next : "",
+    };
+  }
+
+  function normalizeStoredWorkflow(w) {
+    if (!w || typeof w !== "object") return null;
+    const id = typeof w.id === "string" && w.id ? w.id : genWorkflowId();
+    const steps = Array.isArray(w.steps) ? w.steps.map(normalizeStoredStep).filter(Boolean) : [];
+    steps.forEach((s, i) => {
+      s.ordinal = i;
+    });
+    return {
+      schemaVersion: typeof w.schemaVersion === "number" ? w.schemaVersion : WORKFLOW_SCHEMA_VERSION,
+      id,
+      title: typeof w.title === "string" && w.title.trim() ? w.title.trim() : "Untitled",
+      goal: typeof w.goal === "string" ? w.goal : "",
+      createdAt: typeof w.createdAt === "string" ? w.createdAt : new Date().toISOString(),
+      updatedAt: typeof w.updatedAt === "string" ? w.updatedAt : new Date().toISOString(),
+      steps,
+    };
+  }
+
+  function loadWorkflowsFromStorage() {
+    try {
+      const raw = localStorage.getItem(LS_WORKFLOWS);
+      if (!raw) return [];
+      const data = JSON.parse(raw);
+      if (!Array.isArray(data)) return [];
+      return data.map(normalizeStoredWorkflow).filter(Boolean);
+    } catch {
+      return [];
+    }
+  }
+
+  function persistWorkflows(arr) {
+    try {
+      localStorage.setItem(LS_WORKFLOWS, JSON.stringify(arr));
+    } catch {
+      setTeamStatus("Could not save workflows (storage full?)");
+    }
+  }
+
+  function persistTeamDraft() {
+    try {
+      localStorage.setItem(LS_TEAM_DRAFT, JSON.stringify(teamDraft));
+    } catch {
+      /* ignore */
+    }
+  }
+
+  function loadTeamDraftFromStorage() {
+    try {
+      const raw = localStorage.getItem(LS_TEAM_DRAFT);
+      if (!raw) return;
+      const d = JSON.parse(raw);
+      if (!d || typeof d !== "object") return;
+      teamDraft.goal = typeof d.goal === "string" ? d.goal : "";
+      teamDraft.editingId = typeof d.editingId === "string" ? d.editingId : null;
+      teamDraft.editingTitle = typeof d.editingTitle === "string" ? d.editingTitle : "";
+      teamDraft.steps = Array.isArray(d.steps) ? d.steps.map(normalizeStoredStep).filter(Boolean) : [];
+      teamDraft.steps.forEach((s, i) => {
+        s.ordinal = i;
+      });
+    } catch {
+      /* ignore */
+    }
+  }
+
+  function syncTeamGoalInputs() {
+    const ta = document.getElementById("team-goal");
+    if (ta) ta.value = teamDraft.goal || "";
+  }
+
+  async function refreshTeamRegistry() {
+    if (isFile) {
+      teamRegistryItems = [];
+      renderTeamPickList();
+      return;
+    }
+    try {
+      const r = await fetch(resolveApi("/api/registry-items"), { cache: "no-store" });
+      const data = await r.json();
+      teamRegistryItems = data && data.ok && Array.isArray(data.items) ? data.items : [];
+    } catch {
+      teamRegistryItems = [];
+    }
+    renderTeamPickList();
+  }
+
+  function renumberTeamSteps() {
+    teamDraft.steps.forEach((s, i) => {
+      s.ordinal = i;
+    });
+  }
+
+  function renderTeamSteps() {
+    const root = document.getElementById("team-steps-list");
+    if (!root) return;
+    root.replaceChildren();
+    if (!teamDraft.steps.length) {
+      const p = document.createElement("p");
+      p.className = "explore-empty";
+      p.textContent = "Add steps from the list or use Suggest order.";
+      root.appendChild(p);
+      persistTeamDraft();
+      return;
+    }
+    teamDraft.steps.forEach((step, idx) => {
+      const card = document.createElement("div");
+      card.className = "team-step-card";
+      const head = document.createElement("div");
+      head.className = "team-step-head";
+      const badge = document.createElement("span");
+      badge.className = "team-step-badge" + (step.kind === "skill" ? " is-skill" : "");
+      badge.textContent = step.kind === "skill" ? "skill" : "agent";
+      const title = document.createElement("div");
+      title.className = "team-step-title";
+      title.textContent = step.titleSnapshot || step.refId;
+      const actions = document.createElement("div");
+      actions.className = "team-step-actions";
+      const bUp = document.createElement("button");
+      bUp.type = "button";
+      bUp.textContent = "↑";
+      bUp.title = "Move up";
+      bUp.disabled = idx === 0;
+      bUp.addEventListener("click", () => {
+        if (idx <= 0) return;
+        const t = teamDraft.steps[idx - 1];
+        teamDraft.steps[idx - 1] = teamDraft.steps[idx];
+        teamDraft.steps[idx] = t;
+        renumberTeamSteps();
+        renderTeamSteps();
+      });
+      const bDn = document.createElement("button");
+      bDn.type = "button";
+      bDn.textContent = "↓";
+      bDn.title = "Move down";
+      bDn.disabled = idx >= teamDraft.steps.length - 1;
+      bDn.addEventListener("click", () => {
+        if (idx >= teamDraft.steps.length - 1) return;
+        const t = teamDraft.steps[idx + 1];
+        teamDraft.steps[idx + 1] = teamDraft.steps[idx];
+        teamDraft.steps[idx] = t;
+        renumberTeamSteps();
+        renderTeamSteps();
+      });
+      const bRm = document.createElement("button");
+      bRm.type = "button";
+      bRm.textContent = "remove";
+      bRm.addEventListener("click", () => {
+        teamDraft.steps.splice(idx, 1);
+        renumberTeamSteps();
+        renderTeamSteps();
+      });
+      actions.appendChild(bUp);
+      actions.appendChild(bDn);
+      actions.appendChild(bRm);
+      head.appendChild(badge);
+      head.appendChild(title);
+      head.appendChild(actions);
+      const ref = document.createElement("div");
+      ref.className = "team-step-ref";
+      ref.textContent = step.refId;
+      const note = document.createElement("textarea");
+      note.className = "text-in team-step-note";
+      note.value = step.note || "";
+      note.placeholder = "Handoff note…";
+      note.addEventListener("change", () => {
+        step.note = note.value;
+        persistTeamDraft();
+      });
+      card.appendChild(head);
+      card.appendChild(ref);
+      card.appendChild(note);
+      root.appendChild(card);
+    });
+    persistTeamDraft();
+  }
+
+  function addAgentStepFromPath(path) {
+    const agent = CATALOG.find((a) => a.path === path);
+    if (!agent) return;
+    const refId = agent.path;
+    if (teamDraft.steps.some((s) => s.kind === "agent" && s.refId === refId)) {
+      setTeamStatus("Already in sequence: " + agent.name);
+      return;
+    }
+    teamDraft.steps.push({
+      stepId: genStepId(),
+      ordinal: teamDraft.steps.length,
+      kind: "agent",
+      refId,
+      titleSnapshot: agent.name || refId,
+      note: "",
+    });
+    setTeamStatus("Added " + agent.name);
+    renderTeamSteps();
+  }
+
+  function addRegistryStepFromId(regId) {
+    const row = teamRegistryItems.find((r) => r.id === regId);
+    if (!row) return;
+    if (teamDraft.steps.some((s) => s.refId === regId)) {
+      setTeamStatus("Already in sequence.");
+      return;
+    }
+    const itk = String(row.item_type || "").toLowerCase() === "agent" ? "agent" : "skill";
+    teamDraft.steps.push({
+      stepId: genStepId(),
+      ordinal: teamDraft.steps.length,
+      kind: itk,
+      refId: regId,
+      titleSnapshot: row.name || regId,
+      note: "",
+    });
+    setTeamStatus("Added " + (row.name || regId));
+    renderTeamSteps();
+  }
+
+  function scorePickRow(blob, q) {
+    const qt = q.trim().toLowerCase();
+    if (!qt) return 1;
+    let s = 0;
+    if (blob.includes(qt)) s += 20;
+    const parts = qt.split(/\s+/).filter((x) => x.length > 1);
+    for (const p of parts) if (blob.includes(p)) s += 5;
+    return s;
+  }
+
+  function renderTeamPickList() {
+    const root = document.getElementById("team-pick-list");
+    const qel = document.getElementById("team-pick-search");
+    if (!root) return;
+    const q = (qel && qel.value) || "";
+    root.replaceChildren();
+    const maxRows = 60;
+    const rows = [];
+
+    for (const agent of getSourceFilteredCatalog()) {
+      const blob = [agent.name, agent.path, agent.description || "", agent.vibe || ""].join(" ").toLowerCase();
+      const sc = scorePickRow(blob, q);
+      if (q.trim() && sc <= 0) continue;
+      rows.push({ kind: "agent", sc: sc || 1, agent });
+    }
+
+    const sf = getActiveSourceFilterIds();
+    for (const row of teamRegistryItems) {
+      if (sf.length && row.source_id && sf.indexOf(row.source_id) === -1) continue;
+      const blob = [row.name, row.id, row.description || "", row.source_path || "", row.item_type || ""]
+        .join(" ")
+        .toLowerCase();
+      const sc = scorePickRow(blob, q);
+      if (q.trim() && sc <= 0) continue;
+      rows.push({ kind: "reg", sc: sc || 1, row });
+    }
+
+    rows.sort((a, b) => {
+      const ac = a.sc - b.sc;
+      if (ac !== 0) return -ac;
+      const an = a.kind === "agent" ? a.agent.name : a.row.name;
+      const bn = b.kind === "agent" ? b.agent.name : b.row.name;
+      return String(an).localeCompare(String(bn));
+    });
+
+    let n = 0;
+    for (const item of rows) {
+      if (n >= maxRows) break;
+      if (item.kind === "agent") {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "team-pick-row";
+        const k = document.createElement("div");
+        k.className = "team-pick-kind";
+        k.textContent = "agent";
+        const t = document.createElement("div");
+        t.className = "team-pick-title";
+        t.textContent = item.agent.name;
+        const r = document.createElement("div");
+        r.className = "team-pick-ref";
+        r.textContent = item.agent.path;
+        btn.appendChild(k);
+        btn.appendChild(t);
+        btn.appendChild(r);
+        btn.addEventListener("click", () => addAgentStepFromPath(item.agent.path));
+        root.appendChild(btn);
+        n++;
+      } else {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "team-pick-row";
+        const k = document.createElement("div");
+        k.className = "team-pick-kind";
+        k.textContent = String(item.row.item_type || "registry").toLowerCase() || "registry";
+        const t = document.createElement("div");
+        t.className = "team-pick-title";
+        t.textContent = item.row.name || item.row.id;
+        const r = document.createElement("div");
+        r.className = "team-pick-ref";
+        r.textContent = item.row.id;
+        btn.appendChild(k);
+        btn.appendChild(t);
+        btn.appendChild(r);
+        btn.addEventListener("click", () => addRegistryStepFromId(item.row.id));
+        root.appendChild(btn);
+        n++;
+      }
+    }
+
+    if (!n) {
+      const p = document.createElement("p");
+      p.className = "explore-empty";
+      p.textContent = q.trim()
+        ? "No matches. Widen filters or sync registry."
+        : "Nothing to show. Open Explore or sync registry.";
+      root.appendChild(p);
+    }
+  }
+
+  function currentWorkflowObject() {
+    const now = new Date().toISOString();
+    const id = teamDraft.editingId || genWorkflowId();
+    return {
+      schemaVersion: WORKFLOW_SCHEMA_VERSION,
+      id,
+      title: teamDraft.editingTitle || "Untitled workflow",
+      goal: teamDraft.goal || "",
+      createdAt: now,
+      updatedAt: now,
+      steps: teamDraft.steps.map((s) => ({
+        stepId: s.stepId,
+        ordinal: s.ordinal,
+        kind: s.kind,
+        refId: s.refId,
+        titleSnapshot: s.titleSnapshot,
+        note: s.note || "",
+      })),
+    };
+  }
+
+  function applyPlanSequenceFromApi(data) {
+    if (!data || !data.ok || !Array.isArray(data.steps)) {
+      setTeamStatus((data && data.error) || "Suggest failed.");
+      return;
+    }
+    teamDraft.steps = [];
+    for (const st of data.steps) {
+      const refId = String(st.refId || "").trim();
+      if (!refId) continue;
+      const kind = st.kind === "skill" ? "skill" : "agent";
+      teamDraft.steps.push({
+        stepId: genStepId(),
+        ordinal: teamDraft.steps.length,
+        kind,
+        refId,
+        titleSnapshot: String(st.titleSnapshot || refId),
+        note: String(st.why_next || "").trim(),
+      });
+    }
+    renumberTeamSteps();
+    const warns = data.warnings || [];
+    if (data.summary && warns.length) setTeamStatus(data.summary + " · " + warns.join(" "));
+    else if (data.summary) setTeamStatus(data.summary);
+    else if (warns.length) setTeamStatus(warns.join(" "));
+    else setTeamStatus("Applied " + teamDraft.steps.length + " steps.");
+    renderTeamSteps();
+  }
+
+  async function teamSuggestOrder() {
+    const g = (document.getElementById("team-goal") && document.getElementById("team-goal").value.trim()) || "";
+    if (!g) {
+      setTeamStatus("Enter a goal first.");
+      return;
+    }
+    if (!geminiInstalledCached) {
+      setTeamStatus("Gemini SDK not available on server.");
+      return;
+    }
+    const keyOk = serverGeminiKeyCached || (document.getElementById("api-key") && document.getElementById("api-key").value.trim());
+    if (!keyOk) {
+      setTeamStatus("Add a Gemini API key in the runtime panel first.");
+      return;
+    }
+    teamDraft.goal = g;
+    persistTeamDraft();
+    setTeamStatus("Planning sequence…");
+    const selectedCats = Array.from(divisionBox.querySelectorAll("input:checked")).map((el) => el.dataset.category);
+    const body = {
+      goal: g,
+      categories: selectedCats.length ? selectedCats : [],
+    };
+    const extra = document.getElementById("extra-ctx");
+    if (extra && extra.value.trim()) body.extra = extra.value.trim();
+    const keyVal = document.getElementById("api-key").value.trim();
+    if (keyVal) body.api_key = keyVal;
+    body.model = document.getElementById("model-select").value;
+    body.temperature = parseFloat(document.getElementById("temp").value);
+    const sf = getActiveSourceFilterIds();
+    if (sf.length) body.source_ids = sf;
+    body.max_steps = 18;
+    let res;
+    try {
+      res = await fetch(resolveApi("/api/plan-sequence"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+    } catch {
+      setTeamStatus("Server unreachable. Run webapp.py.");
+      return;
+    }
+    let data = {};
+    try {
+      data = await res.json();
+    } catch {
+      setTeamStatus("Bad response from plan-sequence.");
+      return;
+    }
+    if (!data.ok) {
+      setTeamStatus(data.error || "plan-sequence failed");
+      return;
+    }
+    applyPlanSequenceFromApi(data);
+  }
+
+  function downloadJson(filename, obj) {
+    const blob = new Blob([JSON.stringify(obj, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  function exportTeamDraftFile() {
+    const wf = currentWorkflowObject();
+    const slug = (wf.title || "workflow").replace(/[^\w\-]+/g, "-").replace(/^-|-$/g, "") || "workflow";
+    downloadJson(slug + "-" + String(wf.id).slice(0, 8) + ".json", wf);
+    setTeamStatus("Exported draft JSON.");
+  }
+
+  function saveWorkflowToLibrary() {
+    const title =
+      window.prompt("Workflow title", teamDraft.editingTitle || "My workflow") ||
+      teamDraft.editingTitle ||
+      "My workflow";
+    const list = loadWorkflowsFromStorage();
+    const wf = currentWorkflowObject();
+    wf.title = title.trim() || "Untitled";
+    wf.updatedAt = new Date().toISOString();
+    if (!teamDraft.editingId) {
+      wf.createdAt = wf.updatedAt;
+    } else {
+      const prev = list.find((x) => x.id === teamDraft.editingId);
+      if (prev && prev.createdAt) wf.createdAt = prev.createdAt;
+    }
+    const idx = list.findIndex((x) => x.id === wf.id);
+    if (idx === -1) list.push(wf);
+    else list[idx] = wf;
+    persistWorkflows(list);
+    teamDraft.editingId = wf.id;
+    teamDraft.editingTitle = wf.title;
+    persistTeamDraft();
+    setTeamStatus("Saved: " + wf.title);
+    renderWorkflowsLibrary();
+  }
+
+  function renderWorkflowsLibrary() {
+    const ul = document.getElementById("wf-saved-list");
+    if (!ul) return;
+    const list = loadWorkflowsFromStorage();
+    ul.replaceChildren();
+    if (!list.length) {
+      const li = document.createElement("li");
+      li.className = "explore-empty";
+      li.textContent = "No saved workflows yet.";
+      ul.appendChild(li);
+      return;
+    }
+    list.sort((a, b) => (b.updatedAt || "").localeCompare(a.updatedAt || ""));
+    for (const wf of list) {
+      const li = document.createElement("li");
+      li.className = "wf-saved-li";
+      const t = document.createElement("div");
+      t.className = "wf-saved-title";
+      t.textContent = wf.title || wf.id;
+      const m = document.createElement("div");
+      m.className = "wf-saved-meta";
+      const stepCount = Array.isArray(wf.steps) ? wf.steps.length : 0;
+      m.textContent = stepCount + " steps · " + (wf.updatedAt || "").slice(0, 16);
+      const actions = document.createElement("div");
+      actions.className = "wf-saved-actions";
+      const bLoad = document.createElement("button");
+      bLoad.type = "button";
+      bLoad.className = "ghost";
+      bLoad.textContent = "Load in builder";
+      bLoad.addEventListener("click", () => {
+        loadWorkflowIntoDraft(wf);
+        setMainWorkspaceMode("team");
+        navSection = "team-builder";
+        setSidebarPanelByNav("team-builder");
+        syncNavActiveStates();
+        void refreshTeamRegistry();
+        renderTeamPickList();
+        renderTeamSteps();
+        syncTeamGoalInputs();
+      });
+      const bDup = document.createElement("button");
+      bDup.type = "button";
+      bDup.className = "ghost";
+      bDup.textContent = "Duplicate";
+      bDup.addEventListener("click", () => {
+        const copy = JSON.parse(JSON.stringify(wf));
+        copy.id = genWorkflowId();
+        copy.title = (copy.title || "Workflow") + " copy";
+        copy.createdAt = copy.updatedAt = new Date().toISOString();
+        const lst = loadWorkflowsFromStorage();
+        lst.push(normalizeStoredWorkflow(copy));
+        persistWorkflows(lst);
+        renderWorkflowsLibrary();
+      });
+      const bDel = document.createElement("button");
+      bDel.type = "button";
+      bDel.className = "ghost";
+      bDel.textContent = "Delete";
+      bDel.addEventListener("click", () => {
+        if (!window.confirm('Delete workflow "' + (wf.title || wf.id) + '"?')) return;
+        const lst = loadWorkflowsFromStorage().filter((x) => x.id !== wf.id);
+        persistWorkflows(lst);
+        if (teamDraft.editingId === wf.id) {
+          teamDraft.editingId = null;
+          teamDraft.editingTitle = "";
+          persistTeamDraft();
+        }
+        renderWorkflowsLibrary();
+      });
+      const bEx = document.createElement("button");
+      bEx.type = "button";
+      bEx.className = "ghost";
+      bEx.textContent = "Export";
+      bEx.addEventListener("click", () => {
+        const slug = (wf.title || "workflow").replace(/[^\w\-]+/g, "-") || "workflow";
+        downloadJson(slug + ".json", wf);
+      });
+      actions.appendChild(bLoad);
+      actions.appendChild(bDup);
+      actions.appendChild(bEx);
+      actions.appendChild(bDel);
+      li.appendChild(t);
+      li.appendChild(m);
+      li.appendChild(actions);
+      ul.appendChild(li);
+    }
+  }
+
+  function loadWorkflowIntoDraft(wf) {
+    const n = normalizeStoredWorkflow(wf);
+    if (!n) return;
+    teamDraft.goal = n.goal || "";
+    teamDraft.steps = n.steps || [];
+    teamDraft.editingId = n.id;
+    teamDraft.editingTitle = n.title || "";
+    renumberTeamSteps();
+    syncTeamGoalInputs();
+    renderTeamSteps();
+    persistTeamDraft();
+    setTeamStatus("Loaded: " + (n.title || n.id));
+  }
+
+  function mergeImportedWorkflows(parsed) {
+    let incoming = [];
+    if (Array.isArray(parsed)) incoming = parsed;
+    else if (parsed && parsed.workflows && Array.isArray(parsed.workflows)) incoming = parsed.workflows;
+    else if (parsed && typeof parsed === "object" && Array.isArray(parsed.steps)) incoming = [parsed];
+    const norm = incoming.map(normalizeStoredWorkflow).filter(Boolean);
+    if (!norm.length) {
+      setTeamStatus("Import: no valid workflows in file.");
+      return;
+    }
+    const list = loadWorkflowsFromStorage();
+    const byId = new Map(list.map((w) => [w.id, w]));
+    for (const w of norm) {
+      byId.set(w.id, w);
+    }
+    const merged = Array.from(byId.values());
+    persistWorkflows(merged);
+    renderWorkflowsLibrary();
+    setTeamStatus("Imported " + norm.length + " workflow(s).");
+  }
+
+  function initTeamBuilderWorkflows() {
+    loadTeamDraftFromStorage();
+    syncTeamGoalInputs();
+    document.getElementById("team-goal")?.addEventListener("input", () => {
+      const ta = document.getElementById("team-goal");
+      teamDraft.goal = (ta && ta.value) || "";
+      persistTeamDraft();
+    });
+    document.getElementById("team-pick-search")?.addEventListener("input", () => renderTeamPickList());
+    document.getElementById("team-btn-clear")?.addEventListener("click", () => {
+      teamDraft.steps = [];
+      teamDraft.editingId = null;
+      teamDraft.editingTitle = "";
+      renumberTeamSteps();
+      renderTeamSteps();
+      persistTeamDraft();
+      setTeamStatus("Cleared sequence.");
+    });
+    document.getElementById("team-btn-suggest")?.addEventListener("click", () => {
+      void teamSuggestOrder();
+    });
+    document.getElementById("team-btn-save")?.addEventListener("click", () => saveWorkflowToLibrary());
+    document.getElementById("team-btn-export")?.addEventListener("click", () => exportTeamDraftFile());
+    document.getElementById("team-btn-import")?.addEventListener("click", () => document.getElementById("team-import-file")?.click());
+    document.getElementById("team-import-file")?.addEventListener("change", (ev) => {
+      const f = ev.target.files && ev.target.files[0];
+      if (!f) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          const parsed = JSON.parse(String(reader.result || "{}"));
+          mergeImportedWorkflows(parsed);
+        } catch {
+          setTeamStatus("Import: invalid JSON.");
+        }
+        ev.target.value = "";
+      };
+      reader.readAsText(f);
+    });
+    document.getElementById("wf-btn-refresh")?.addEventListener("click", () => renderWorkflowsLibrary());
+    document.getElementById("wf-btn-import")?.addEventListener("click", () => document.getElementById("wf-import-file")?.click());
+    document.getElementById("wf-import-file")?.addEventListener("change", (ev) => {
+      const f = ev.target.files && ev.target.files[0];
+      if (!f) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          const parsed = JSON.parse(String(reader.result || "{}"));
+          mergeImportedWorkflows(parsed);
+        } catch {
+          setTeamStatus("Import: invalid JSON.");
+        }
+        ev.target.value = "";
+      };
+      reader.readAsText(f);
+    });
+    void refreshTeamRegistry();
+    renderTeamSteps();
+    renderTeamPickList();
+    renderWorkflowsLibrary();
+  }
+
+  function openSourceInExplore(sourceId) {
+    if (!sourceId) return;
+    setMainWorkspaceMode("match");
+    librarySourceFilter = sourceId;
+    navSection = "explore";
+    setSidebarPanelByNav("explore");
+    renderExploreList();
+    syncNavActiveStates();
+    if (exploreSearchEl) {
+      requestAnimationFrame(() => exploreSearchEl.focus());
+    }
+  }
+
+  function renderSourcesList() {
+    const ul = document.getElementById("sources-list");
+    if (!ul) return;
+    const srcs = (sourcesConfig && sourcesConfig.sources) || [];
+    ul.replaceChildren();
+    for (const s of srcs) {
+      if (!s || !s.id) continue;
+      const li = document.createElement("li");
+      li.className = "is-clickable";
+      li.setAttribute("role", "button");
+      li.tabIndex = 0;
+      li.setAttribute("aria-label", `Open in Explore: ${s.name || s.id}`);
+      if (s.enabled === false) li.classList.add("is-disabled");
+      const name = document.createElement("div");
+      name.className = "sources-name";
+      name.textContent = s.name || s.id;
+      const idl = document.createElement("div");
+      idl.className = "sources-id";
+      idl.textContent = s.id;
+      const meta = document.createElement("div");
+      meta.className = "sources-meta";
+      const bits = [
+        s.type,
+        s.local ? "local" : "remote",
+        s.enabled ? "enabled" : "disabled",
+      ].filter(Boolean);
+      meta.textContent = bits.join(" · ");
+      li.appendChild(name);
+      li.appendChild(idl);
+      li.appendChild(meta);
+      const sid = s.id;
+      li.addEventListener("click", () => openSourceInExplore(sid));
+      li.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          openSourceInExplore(sid);
+        }
+      });
+      ul.appendChild(li);
+    }
+  }
+
+  function syncNavActiveStates() {
+    document.querySelectorAll("#explore-app-nav [data-nav]").forEach((btn) => {
+      const n = btn.getAttribute("data-nav");
+      btn.classList.toggle("is-active", n === navSection);
+    });
+    document.querySelectorAll(".explore-nav-lib").forEach((btn) => {
+      const raw = btn.getAttribute("data-lib-filter") || "";
+      const parts = raw
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean);
+      let on = false;
+      if (librarySourceFilter == null) on = false;
+      else if (Array.isArray(librarySourceFilter)) {
+        const a = new Set(librarySourceFilter);
+        const b = new Set(parts);
+        on = a.size === b.size && a.size > 0 && [...a].every((x) => b.has(x));
+      } else {
+        on = parts.length === 1 && parts[0] === String(librarySourceFilter);
+      }
+      btn.classList.toggle("is-active", on);
+    });
+  }
+
+  function initAppNavigation() {
+    document.getElementById("nav-main-explore")?.addEventListener("click", () => {
+      setMainWorkspaceMode("match");
+      librarySourceFilter = null;
+      navSection = "explore";
+      setSidebarPanelByNav("explore");
+      rebuildExploreSubs();
+      renderExploreList();
+      syncNavActiveStates();
+    });
+    document.getElementById("nav-main-sources")?.addEventListener("click", () => {
+      navSection = "sources";
+      setSidebarPanelByNav("sources");
+      renderSourcesList();
+      syncNavActiveStates();
+    });
+    document.getElementById("nav-main-team")?.addEventListener("click", () => {
+      setMainWorkspaceMode("team");
+      navSection = "team-builder";
+      setSidebarPanelByNav("team-builder");
+      syncNavActiveStates();
+      void refreshTeamRegistry();
+      renderTeamPickList();
+      renderTeamSteps();
+      syncTeamGoalInputs();
+    });
+    document.getElementById("nav-main-workflows")?.addEventListener("click", () => {
+      navSection = "workflows";
+      setSidebarPanelByNav("workflows");
+      syncNavActiveStates();
+      renderWorkflowsLibrary();
+    });
+    document.getElementById("nav-main-exports")?.addEventListener("click", () => {
+      navSection = "exports";
+      setSidebarPanelByNav("exports");
+      syncNavActiveStates();
+    });
+    document.getElementById("nav-tool-import")?.addEventListener("click", () => {
+      navSection = "import-sync";
+      setSidebarPanelByNav("import-sync");
+      syncNavActiveStates();
+    });
+    document.getElementById("nav-tool-health")?.addEventListener("click", () => {
+      navSection = "registry-health";
+      setSidebarPanelByNav("registry-health");
+      syncNavActiveStates();
+    });
+    document.getElementById("nav-tool-settings")?.addEventListener("click", () => {
+      navSection = "settings";
+      setSidebarPanelByNav("settings");
+      syncNavActiveStates();
+    });
+    document.getElementById("nav-settings-open-runtime")?.addEventListener("click", () => {
+      openRuntime();
+    });
+    document.querySelectorAll(".explore-nav-lib").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        setMainWorkspaceMode("match");
+        const raw = btn.getAttribute("data-lib-filter") || "";
+        if (raw.includes(",")) {
+          librarySourceFilter = raw
+            .split(",")
+            .map((s) => s.trim())
+            .filter(Boolean);
+        } else {
+          librarySourceFilter = raw.trim() || null;
+        }
+        navSection = "explore";
+        setSidebarPanelByNav("explore");
+        rebuildExploreSubs();
+        renderExploreList();
+        syncNavActiveStates();
+      });
+    });
+    renderSourcesList();
+    syncNavActiveStates();
+  }
 
   function exploreSidebarWidthMin() {
     return 220;
@@ -4113,16 +5875,105 @@
     });
   }
 
-  /** Searchable rows: normalized blob + token bag for fast filtering */
-  const exploreRows = CATALOG.map((agent) => {
-    const blob = [agent.name, agent.path, agent.category, agent.description || "", agent.vibe || ""]
-      .join(" ")
-      .toLowerCase();
-    const bag = new Set(collectTextTokens(blob));
-    return { agent, blob, bag };
-  });
+  /** Searchable rows: normalized blob + token bag for fast filtering (source scope applied). */
+  function buildExploreRows() {
+    return CATALOG.filter(passesSourceFilter).map((agent) => {
+      const sub = (agent.subcategory && String(agent.subcategory)) || "";
+      const blob = [agent.name, agent.path, agent.category, sub, agent.description || "", agent.vibe || ""]
+        .join(" ")
+        .toLowerCase();
+      const bag = new Set(collectTextTokens(blob));
+      return { agent, blob, bag };
+    });
+  }
 
   let exploreCatFilter = "";
+  /** `null` = no subgenre filter. `""` = root only (file at category / pack root). */
+  let exploreSubFilter = null;
+
+  function subgenreLabel(s) {
+    const t = (s || "").trim();
+    return t || "root";
+  }
+
+  function syncExploreSubButtons() {
+    if (!exploreSubsEl) return;
+    exploreSubsEl.querySelectorAll(".explore-sub").forEach((btn) => {
+      const isAll = btn.classList.contains("is-all");
+      const isRoot = btn.classList.contains("is-root");
+      const v = (btn.dataset.sub && String(btn.dataset.sub)) || "";
+      const active = isAll
+        ? exploreSubFilter === null
+        : isRoot
+          ? exploreSubFilter === ""
+          : exploreSubFilter === v;
+      btn.classList.toggle("is-active", active);
+      btn.setAttribute("aria-selected", active ? "true" : "false");
+    });
+  }
+
+  function rebuildExploreSubs() {
+    if (!exploreSubsEl || !exploreSubsWrapEl) return;
+    exploreSubsEl.replaceChildren();
+    if (!exploreCatFilter) {
+      exploreSubFilter = null;
+      exploreSubsWrapEl.hidden = true;
+      return;
+    }
+    const set = new Set();
+    for (const a of getSourceFilteredCatalog()) {
+      if (a.category !== exploreCatFilter) continue;
+      set.add((a.subcategory || "").trim());
+    }
+    const list = Array.from(set);
+    if (list.length <= 1) {
+      exploreSubFilter = null;
+      exploreSubsWrapEl.hidden = true;
+      return;
+    }
+    list.sort((a, b) => {
+      if (a === "" && b !== "") return -1;
+      if (b === "" && a !== "") return 1;
+      return a.localeCompare(b, undefined, { sensitivity: "base" });
+    });
+    if (exploreSubFilter != null && !list.includes(exploreSubFilter)) {
+      exploreSubFilter = null;
+    }
+    exploreSubsWrapEl.hidden = false;
+    const mkSubAll = () => {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "explore-sub is-all";
+      btn.textContent = "all";
+      btn.setAttribute("role", "tab");
+      btn.addEventListener("click", () => {
+        exploreSubFilter = null;
+        syncExploreSubButtons();
+        renderExploreList();
+      });
+      return btn;
+    };
+    const mkSubVal = (isRoot, s) => {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "explore-sub" + (isRoot ? " is-root" : "");
+      btn.textContent = subgenreLabel(s);
+      if (!isRoot) btn.dataset.sub = s;
+      btn.setAttribute("role", "tab");
+      btn.addEventListener("click", () => {
+        if (isRoot) exploreSubFilter = exploreSubFilter === "" ? null : "";
+        else exploreSubFilter = exploreSubFilter === s ? null : s;
+        syncExploreSubButtons();
+        renderExploreList();
+      });
+      return btn;
+    };
+    exploreSubsEl.appendChild(mkSubAll());
+    for (const s of list) {
+      exploreSubsEl.appendChild(mkSubVal(s === "", s));
+    }
+    syncExploreSubButtons();
+  }
 
   function exploreMediaNarrow() {
     return window.matchMedia("(max-width: 900px)").matches;
@@ -4232,13 +6083,18 @@
         }
       }
     });
-    document.querySelector(".canvas")?.addEventListener("click", (e) => {
-      const btn = e.target.closest("button.js-agent-source");
-      if (!btn || !btn.dataset.path) return;
-      e.preventDefault();
-      e.stopPropagation();
-      openAgentSourceForPath(btn.dataset.path);
-    });
+    /* Full-screen #agent-dedicated is outside .canvas; handle all "local / view full markdown" in one place. */
+    document.addEventListener(
+      "click",
+      (e) => {
+        const btn = e.target.closest("button.js-agent-source");
+        if (!btn || !btn.dataset.path) return;
+        e.preventDefault();
+        e.stopPropagation();
+        openAgentSourceForPath(btn.dataset.path);
+      },
+      true,
+    );
     document.addEventListener("keydown", (e) => {
       if (e.key !== "Escape") return;
       const md = document.getElementById("agent-source-modal");
@@ -4309,8 +6165,28 @@
     loc.textContent = "local";
     loc.title = "View full markdown (copy)";
     loc.addEventListener("click", (e) => e.stopPropagation());
+    const teamBtn = document.createElement("button");
+    teamBtn.type = "button";
+    teamBtn.className = "js-add-team";
+    teamBtn.textContent = "team";
+    teamBtn.title = "Add to Team Builder sequence";
+    teamBtn.dataset.path = agent.path;
+    teamBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      setMainWorkspaceMode("team");
+      addAgentStepFromPath(agent.path);
+      navSection = "team-builder";
+      setSidebarPanelByNav("team-builder");
+      syncNavActiveStates();
+      void refreshTeamRegistry();
+      renderTeamPickList();
+      renderTeamSteps();
+      syncTeamGoalInputs();
+      setExploreOpen(true);
+    });
     links.appendChild(gh);
     links.appendChild(loc);
+    links.appendChild(teamBtn);
     art.dataset.path = agent.path;
     art.tabIndex = 0;
     art.setAttribute("aria-label", `Open agent brief: ${agent.name}`);
@@ -4332,10 +6208,14 @@
 
   function renderExploreList() {
     if (!exploreListEl) return;
+    const exploreRows = buildExploreRows();
     const q = (exploreSearchEl && exploreSearchEl.value) || "";
     const hasQuery = q.trim().length > 0;
     let rows = exploreRows.slice();
     if (exploreCatFilter) rows = rows.filter((r) => r.agent.category === exploreCatFilter);
+    if (exploreCatFilter && exploreSubFilter !== null) {
+      rows = rows.filter((r) => (r.agent.subcategory || "").trim() === exploreSubFilter);
+    }
     if (hasQuery) {
       rows = rows
         .map((row) => ({ row, s: exploreScoreRow(q, row) }))
@@ -4345,7 +6225,11 @@
     } else {
       rows.sort((a, b) => {
         const c = a.agent.category.localeCompare(b.agent.category);
-        return c !== 0 ? c : a.agent.name.localeCompare(b.agent.name);
+        if (c !== 0) return c;
+        const sa = (a.agent.subcategory || "").toLowerCase();
+        const sb = (b.agent.subcategory || "").toLowerCase();
+        if (sa !== sb) return sa.localeCompare(sb);
+        return a.agent.name.localeCompare(b.agent.name);
       });
     }
     const frag = document.createDocumentFragment();
@@ -4355,13 +6239,17 @@
       empty.textContent = hasQuery ? "No agents match that filter." : "No catalog entries.";
       frag.appendChild(empty);
     } else if (!hasQuery) {
-      let lastCat = "";
+      let lastKey = "";
       for (const row of rows) {
-        if (row.agent.category !== lastCat) {
-          lastCat = row.agent.category;
+        const a = row.agent;
+        const sub = (a.subcategory || "").trim();
+        const key = a.category + "\0" + sub;
+        if (key !== lastKey) {
+          lastKey = key;
           const head = document.createElement("div");
           head.className = "explore-section-head";
-          head.textContent = DIVISION_LABELS[row.agent.category] || row.agent.category;
+          const catLabel = DIVISION_LABELS[a.category] || a.category;
+          head.textContent = sub ? catLabel + " · " + sub : catLabel;
           frag.appendChild(head);
         }
         frag.appendChild(makeExploreRow(row.agent));
@@ -4393,7 +6281,7 @@
     if (chev) chev.textContent = open ? "‹" : "›";
     exploreSidebarEl.setAttribute("aria-hidden", open ? "false" : "true");
     if (exploreBackdropEl) {
-      if (open && exploreMediaNarrow()) {
+      if (open) {
         exploreBackdropEl.hidden = false;
         exploreBackdropEl.setAttribute("aria-hidden", "false");
         requestAnimationFrame(() => exploreBackdropEl.classList.add("is-on"));
@@ -4427,8 +6315,13 @@
       "aria-label",
       collapsed ? "Expand category filters" : "Collapse category filters",
     );
-    if (collapsed) exploreCatsEl.setAttribute("inert", "");
-    else exploreCatsEl.removeAttribute("inert");
+    if (collapsed) {
+      exploreCatsEl.setAttribute("inert", "");
+      exploreSubsWrapEl?.setAttribute("inert", "");
+    } else {
+      exploreCatsEl.removeAttribute("inert");
+      exploreSubsWrapEl?.removeAttribute("inert");
+    }
   }
 
   function initExploreSidebar() {
@@ -4474,9 +6367,15 @@
       btn.setAttribute("role", "tab");
       btn.setAttribute("aria-selected", cat === exploreCatFilter ? "true" : "false");
       btn.addEventListener("click", () => {
-        if (isAll) exploreCatFilter = "";
-        else exploreCatFilter = exploreCatFilter === cat ? "" : cat;
+        if (isAll) {
+          exploreCatFilter = "";
+          exploreSubFilter = null;
+        } else {
+          exploreCatFilter = exploreCatFilter === cat ? "" : cat;
+          exploreSubFilter = null;
+        }
         syncExploreCatButtons();
+        rebuildExploreSubs();
         renderExploreList();
       });
       return btn;
@@ -4486,12 +6385,33 @@
       exploreCatsEl.appendChild(mkCat(DIVISION_LABELS[cat] || cat, cat, false));
     });
     syncExploreCatButtons();
+    rebuildExploreSubs();
 
     exploreSearchEl.addEventListener("input", () => renderExploreList());
     exploreToggleEl.addEventListener("click", () => toggleExploreOpen());
     if (exploreBackdropEl) {
       exploreBackdropEl.addEventListener("click", () => setExploreOpen(false));
     }
+
+    function pointerDownClosesExplore(e) {
+      if (!exploreSidebarEl.classList.contains("is-open")) return;
+      if (e.type === "pointerdown" && e.button !== 0) return;
+      if (e.target && e.target !== document) {
+        const t = e.target;
+        if (t.closest && t.closest("button#sidebar-toggle")) return;
+        if (t.closest && t.closest("aside#explore-sidebar")) return;
+        if (t.closest && t.closest("#agent-source-modal:not([hidden])")) return;
+        if (t.closest && t.closest("#agent-dedicated:not([hidden])")) return;
+        if (t.closest && t.closest("#agent-spotlight.is-open")) return;
+        if (t.closest && t.closest("#filters-popover.open")) return;
+        if (t.closest && t.closest("#filters-backdrop.open")) return;
+        if (t.closest && t.closest("#app-settings.open")) return;
+        if (t.closest && t.closest("#runtime-backdrop.open")) return;
+      }
+      setExploreOpen(false);
+    }
+    document.addEventListener("pointerdown", pointerDownClosesExplore, true);
+
     window.addEventListener("resize", () => {
       syncExploreSidebarWidthToViewport();
       if (!exploreSidebarEl.classList.contains("is-open")) return;
@@ -4598,7 +6518,8 @@
     const qCompact = queryText.toLowerCase().replace(/\s+/g, " ").trim();
     const idfFn = OFFLINE_LEXICAL.idf;
 
-    const ranked = OFFLINE_LEXICAL.rows.map(({ agent, hs, tokens, nameL }) => {
+    const rowsInPool = OFFLINE_LEXICAL.rows.filter((r) => passesSourceFilter(r.agent));
+    const ranked = rowsInPool.map(({ agent, hs, tokens, nameL }) => {
       let score = 0;
       const termContrib = new Map();
 
@@ -4839,7 +6760,7 @@
     art.dataset.path = path;
     art.dataset.ghBase = ghBase || "";
     art.style.cursor = "pointer";
-    art.title = "Click to show suggested follow-on agents for your prompt";
+    art.title = "Open full profile (click). Use “Follow-on suggestions” for related agents.";
     art.setAttribute("aria-label", `${rank}. ${title}, ${kindLabel} fit ${fitLabel}`);
     const em = document.createElement("div");
     em.className = "emoji";
@@ -4879,6 +6800,7 @@
     gh.target = "_blank";
     gh.rel = "noopener noreferrer";
     gh.textContent = "github";
+    gh.addEventListener("click", (e) => e.stopPropagation());
     links.appendChild(gh);
     const loc = document.createElement("button");
     loc.type = "button";
@@ -4886,12 +6808,40 @@
     loc.dataset.path = path;
     loc.textContent = "local";
     loc.title = "View full markdown (copy)";
+    loc.addEventListener("click", (e) => e.stopPropagation());
     links.appendChild(loc);
     const copyBtn = document.createElement("button");
     wireMatchCopyBtn(copyBtn, copyCtx);
+    const cta = document.createElement("div");
+    cta.className = "card-cta";
+    const openProfile = document.createElement("button");
+    openProfile.type = "button";
+    openProfile.className = "ghost card-open-profile";
+    openProfile.textContent = "Open profile";
+    openProfile.title = "Full agent page · shareable URL";
+    openProfile.addEventListener("click", (e) => {
+      e.stopPropagation();
+      e.preventDefault();
+      const ag = CATALOG.find((a) => a.path === path);
+      if (ag) navigateToAgentPage(ag);
+    });
+    const followBtn = document.createElement("button");
+    followBtn.type = "button";
+    followBtn.className = "ghost card-followups-toggle";
+    followBtn.textContent = "Follow-on suggestions";
+    followBtn.setAttribute("aria-expanded", "false");
+    followBtn.title = "Show next agents for this prompt";
+    followBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      e.preventDefault();
+      toggleCardFollowUps(art);
+    });
+    cta.appendChild(openProfile);
+    cta.appendChild(followBtn);
     aside.appendChild(sc);
     aside.appendChild(copyBtn);
     aside.appendChild(links);
+    aside.appendChild(cta);
     art.appendChild(em);
     art.appendChild(bodyDiv);
     art.appendChild(aside);
@@ -4997,17 +6947,23 @@
       c.classList.remove("card-open");
       const p = c.querySelector(".card-followups");
       if (p) p.hidden = true;
+      c.querySelector(".card-followups-toggle")?.setAttribute("aria-expanded", "false");
     });
   }
 
   function toggleCardFollowUps(card) {
     const wasOpen = card.classList.contains("card-open");
+    const toggle = card.querySelector(".card-followups-toggle");
     closeAllFollowUps();
-    if (wasOpen) return;
+    if (wasOpen) {
+      toggle?.setAttribute("aria-expanded", "false");
+      return;
+    }
     const panel = ensureFollowUpsPanel(card);
     if (!panel) return;
     panel.hidden = false;
     card.classList.add("card-open");
+    toggle?.setAttribute("aria-expanded", "true");
   }
 
   resultsEl.addEventListener("click", (e) => {
@@ -5015,11 +6971,14 @@
     if (e.target.closest("button.js-agent-source")) return;
     if (e.target.closest("button.card-copy")) return;
     if (e.target.closest("button.followup-copy")) return;
+    if (e.target.closest("button.card-open-profile")) return;
+    if (e.target.closest("button.card-followups-toggle")) return;
     if (e.target.closest(".card-followups")) return;
     const card = e.target.closest("article.card");
     if (!card || !resultsEl.contains(card)) return;
     if (!card.dataset.path) return;
-    toggleCardFollowUps(card);
+    const ag = CATALOG.find((a) => a.path === card.dataset.path);
+    if (ag) navigateToAgentPage(ag);
   });
 
   function showGeminiLoading(ctx) {
@@ -5096,8 +7055,10 @@
         modelLabel: modelLabelUi,
         divisionCount: selectedCats.length,
         temperature: Number.isFinite(body.temperature) ? body.temperature : "",
-        agentCount: Array.isArray(CATALOG) ? CATALOG.length : 0,
+        agentCount: getSourceFilteredCatalog().length,
       });
+      const sf = getActiveSourceFilterIds();
+      if (sf.length) body.source_ids = sf;
       let res;
       try {
         res = await fetch(resolveApi("/api/match"), {
@@ -5622,7 +7583,51 @@
   }
 
   let agentDedicatedHashSync = false;
-  let matchmakerInitialTitle = "";
+  /** Element to restore focus when closing dedicated view (a11y). */
+  let dedicatedReturnFocus = null;
+
+  const DEDICATED_FOCUSABLE =
+    "a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), summary, [tabindex]:not([tabindex='-1'])";
+
+  function listDedicatedFocusables(ded) {
+    if (!ded) return [];
+    return Array.prototype.filter.call(
+      ded.querySelectorAll(DEDICATED_FOCUSABLE),
+      (el) => {
+        if (!ded.contains(el) || el.hasAttribute("hidden")) return false;
+        if (el.getAttribute("aria-hidden") === "true") return false;
+        const t = (el.getAttribute("tabindex") || "").trim();
+        if (t === "-1") return false;
+        const s = getComputedStyle(el);
+        if (s.visibility === "hidden" || s.display === "none") return false;
+        return el.getClientRects().length > 0;
+      },
+    );
+  }
+
+  function initDedicatedFocusTrap() {
+    document.addEventListener("keydown", (e) => {
+      if (e.key !== "Tab") return;
+      const srcMd = document.getElementById("agent-source-modal");
+      if (srcMd && !srcMd.hidden) return;
+      const ded = document.getElementById("agent-dedicated");
+      if (!ded || !ded.classList.contains("is-open") || ded.hasAttribute("hidden")) return;
+      if (!ded.contains(document.activeElement)) return;
+      const list = listDedicatedFocusables(ded);
+      if (list.length < 2) return;
+      const first = list[0];
+      const last = list[list.length - 1];
+      if (e.shiftKey) {
+        if (document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        }
+      } else if (document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    });
+  }
 
   function agentPathFromHash() {
     const h = String(location.hash || "");
@@ -5712,7 +7717,9 @@
     const h = document.createElement("h2");
     h.textContent = "More in this division";
     sec.appendChild(h);
-    const peers = CATALOG.filter((a) => a.category === agent.category && a.path !== agent.path).sort((a, b) =>
+    const peers = CATALOG.filter(
+      (a) => a.category === agent.category && a.path !== agent.path && passesSourceFilter(a),
+    ).sort((a, b) =>
       a.name.localeCompare(b.name),
     );
     if (!peers.length) {
@@ -5745,6 +7752,11 @@
     const root = document.getElementById("agent-dedicated");
     const bodyEl = document.getElementById("agent-dedicated-body");
     if (!root || !bodyEl || !agent) return;
+    if (document.activeElement && document.activeElement !== document.body) {
+      dedicatedReturnFocus = document.activeElement;
+    } else {
+      dedicatedReturnFocus = null;
+    }
     closeAgentSpotlight();
     closeRuntime();
     closeFiltersPopover();
@@ -5800,6 +7812,17 @@
     }
     if (bodyEl) bodyEl.replaceChildren();
     if (wasOpen) document.title = initialMatchmakerTitle;
+    if (wasOpen) {
+      const back = dedicatedReturnFocus;
+      dedicatedReturnFocus = null;
+      if (back && typeof back.focus === "function") {
+        try {
+          back.focus();
+        } catch (_) {
+          /* ignore */
+        }
+      }
+    }
     if (wasOpen && String(location.hash || "").startsWith("#/agent/")) {
       agentDedicatedHashSync = true;
       history.replaceState(null, "", location.pathname + location.search);
@@ -5827,12 +7850,6 @@
   function initAgentDedicatedRouting() {
     document.getElementById("agent-dedicated-back")?.addEventListener("click", () => {
       closeAgentDedicatedPage();
-    });
-    document.getElementById("agent-dedicated")?.addEventListener("click", (e) => {
-      const btn = e.target.closest("button.js-agent-source");
-      if (!btn || !btn.dataset.path) return;
-      e.preventDefault();
-      openAgentSourceForPath(btn.dataset.path);
     });
     window.addEventListener("hashchange", () => {
       syncAgentDedicatedFromHash();
@@ -5933,6 +7950,13 @@
   function initSettingsPanelActions() {
     document.getElementById("settings-open-explore")?.addEventListener("click", () => {
       closeRuntime();
+      setMainWorkspaceMode("match");
+      librarySourceFilter = null;
+      navSection = "explore";
+      setSidebarPanelByNav("explore");
+      rebuildExploreSubs();
+      renderExploreList();
+      syncNavActiveStates();
       setExploreOpen(true);
       requestAnimationFrame(() => {
         if (exploreSearchEl) exploreSearchEl.focus();
@@ -5953,7 +7977,10 @@
   updateMatchButton();
   initAgentSourceUi();
   initExploreSidebar();
+  initTeamBuilderWorkflows();
+  initAppNavigation();
   initAgentDedicatedRouting();
+  initDedicatedFocusTrap();
   initSettingsPanelActions();
   metaEl.textContent =
     "Ranked agents appear here — this panel is the deliverable. Add a goal on the left, then run match.";

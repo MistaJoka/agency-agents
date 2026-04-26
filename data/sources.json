@@ -1,0 +1,45 @@
+{
+  "sources": [
+    {
+      "id": "local-agency-agents",
+      "name": "Local Agency Agents",
+      "repo_url": "https://github.com/MistaJoka/agency-agents.git",
+      "type": "agent_pack",
+      "enabled": true,
+      "local": true
+    },
+    {
+      "id": "claude-skills",
+      "name": "Claude Skills",
+      "repo_url": "https://github.com/alirezarezvani/claude-skills.git",
+      "type": "skill_pack",
+      "enabled": true,
+      "local": false,
+      "item_glob": "**/SKILL.md"
+    },
+    {
+      "id": "everything-claude-code",
+      "name": "Everything Claude Code",
+      "repo_url": "https://github.com/affaan-m/everything-claude-code.git",
+      "type": "workflow_system",
+      "enabled": true,
+      "local": false
+    },
+    {
+      "id": "awesome-claude-code-subagents",
+      "name": "Awesome Claude Code Subagents",
+      "repo_url": "https://github.com/VoltAgent/awesome-claude-code-subagents.git",
+      "type": "subagent_pack",
+      "enabled": true,
+      "local": false
+    },
+    {
+      "id": "awesome-codex-subagents",
+      "name": "Awesome Codex Subagents",
+      "repo_url": "https://github.com/VoltAgent/awesome-codex-subagents.git",
+      "type": "subagent_pack",
+      "enabled": true,
+      "local": false
+    }
+  ]
+}

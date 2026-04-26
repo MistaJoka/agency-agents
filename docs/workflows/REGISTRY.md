@@ -22,6 +22,9 @@ Source of truth: `agent-matchmaker/webapp.py`, `agent-matchmaker/matchmaker_lib.
 | WF-11 | Gemini key persistence to `localStorage` | `persistGeminiKeyFromInput` | `apiKeyEl` blur | — |
 | WF-12 | Runtime panel open/close + focus trap | `openRuntime`/`closeRuntime`/keydown Tab+Esc | Chip click / backdrop click / Esc | — |
 | WF-13 | `file://` degraded mode (embedded catalog, heuristic only) | `loadCatalog` + `isFile` branch | Open `index.html` from disk | — |
+| WF-14 | Team Builder + saved workflows (UI, `localStorage`, Explore **team** link) | `index.template.html` team/workflow panels + IIFE | Sidebar **Team Builder** / **Workflows** | [WORKFLOW-14](./WORKFLOW-14-team-builder.md) |
+| WF-15 | `GET /api/registry-items` — registry metadata for Team Builder | `Handler.do_GET` → `fetch_registry_metadata` | HTTP GET | [WORKFLOW-14](./WORKFLOW-14-team-builder.md) |
+| WF-16 | `POST /api/plan-sequence` — Gemini ordered steps + guard | `Handler.do_POST` → `run_plan_sequence_request` → `validate_plan_sequence` | HTTP POST | [WORKFLOW-14](./WORKFLOW-14-team-builder.md) |
 
 ---
 
@@ -29,8 +32,10 @@ Source of truth: `agent-matchmaker/webapp.py`, `agent-matchmaker/matchmaker_lib.
 
 ### `webapp.py`
 - WF-01 startup, `ensure_catalog_exists` guard, port bind
-- WF-03 `/api/health` responder
+- WF-03 `/api/health` responder (includes `registry_items_count`)
 - WF-04 `/api/match` request parsing, validation, dispatch
+- WF-15 `/api/registry-items` registry metadata JSON
+- WF-16 `/api/plan-sequence` Gemini sequence planner
 - WF-05 three-tier key resolution
 
 ### `matchmaker_lib.py`
@@ -38,8 +43,9 @@ Source of truth: `agent-matchmaker/webapp.py`, `agent-matchmaker/matchmaker_lib.
 - `load_dotenv_repo` (merges `.env`, `.env.local`, `agent-matchmaker/.env`, later wins)
 - `load_catalog` (lru_cache of `catalog.json`)
 - `compact_agents` (truncate description to `DESC_MAX=700`)
-- `call_gemini` (configures SDK, forces `response_mime_type=application/json`)
+- `call_gemini` (configures SDK, forces `response_mime_type=application/json`; optional `system_instruction`)
 - WF-06 `validate_and_merge`
+- WF-16 `fetch_registry_metadata`, `validate_plan_sequence`, `run_plan_sequence_request`, `PLAN_SEQUENCE_INSTRUCTION`
 - `run_match_request` orchestration + category filter
 - `github_url` / `local_url` link helpers
 
@@ -54,6 +60,7 @@ Source of truth: `agent-matchmaker/webapp.py`, `agent-matchmaker/matchmaker_lib.
 - WF-11 localStorage key `agency-agents:matchmaker:gemini-api-key`
 - WF-12 runtime modal
 - WF-13 file:// detection
+- WF-14 Team Builder / Workflows (`agency-agents:workflows:v1`, `agency-agents:team-draft:v1`), `GET /api/registry-items`, `POST /api/plan-sequence`
 
 ### `scripts/run-agent-matchmaker.sh`
 - Wraps WF-01; sources `.env` and `agent-matchmaker/.env` into process env before exec
